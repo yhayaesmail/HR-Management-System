@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  role          Role           @default(EMPLOYEE)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  employee      Employee?
+  refreshTokens RefreshToken[]
+}
+
+model Employee {
+  id          String       @id @default(uuid())
+  name        String
+  department  String
+  createdBy   String?
+  updatedBy   String?
+  salary      Float
+  phone       String?
+  address     String?
+  isActive    Boolean      @default(true)
+  title       String
+  deduction   Float
+  userId      String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  attendances Attendance[]
+  user        User         @relation(fields: [userId], references: [id])
+  payrolls    Payroll[]
+  tasks       Tasks[]
+}
+
+model Attendance {
+  id         String           @id @default(uuid())
+  employeeId String
+  date       DateTime
+  status     AttendanceStatus @default(PRESENT)
+  checkIn    DateTime?
+  createdBy  String?
+  updatedBy  String?
+  checkOut   DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  employee   Employee         @relation(fields: [employeeId], references: [id])
+}
+
+model Payroll {
+  id          String   @id @default(uuid())
+  baseSalary  Float
+  finalSalary Float
+  createdBy   String?
+  updatedBy   String?
+  deduction   Float
+  month       Int
+  year        Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Tasks {
+  id                  String       @id @default(uuid())
+  status              TaskStatus   @default(TODO)
+  priority            TaskPriority @default(MEDIUM)
+  description         String?
+  createdBy           String?
+  updatedBy           String?
+  runningTaskDeadline DateTime
+  employeeId          String
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  employee            Employee     @relation(fields: [employeeId], references: [id])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}

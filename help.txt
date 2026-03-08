@@ -1,0 +1,133 @@
+import { PrismaClient } from "../../prisma/generated/prisma/client/index.js";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const prisma = new PrismaClient({
+  adapter,
+});
+export default prisma;
+
+
+
+
+HR-MANAGEMENT-SYSTEM
+│
+├── node_modules
+├── prisma
+│   └── schema.prisma
+│
+├── src
+│
+│   ├── config
+│   │   ├── env.js
+│   │   └── prisma.js
+│
+│   ├── middleware
+│
+│   ├── modules
+│   │   ├── auth
+│   │   ├── users
+│   │   ├── tasks
+│   │   ├── payroll
+│   │   └── attendance
+│
+│   ├── utils
+│
+│   ├── app.js
+│   └── server.js
+│
+├── .env
+├── prisma.config.ts
+├── package.json
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+hr-management-system
+│
+├── src
+│   │
+│   ├── config
+│   │   ├── prisma.js
+│   │   └── env.js
+│   │
+│   ├── modules
+│   │   │
+│   │   ├── auth
+│   │   │   ├── auth.controller.js
+│   │   │   ├── auth.service.js
+│   │   │   ├── auth.routes.js
+│   │   │   └── auth.validation.js
+│   │   │
+│   │   ├── users
+│   │   │   ├── user.controller.js
+│   │   │   ├── user.service.js
+│   │   │   ├── user.routes.js
+│   │   │   └── user.validation.js
+│   │   │
+│   │   ├── tasks
+│   │   │   ├── task.controller.js
+│   │   │   ├── task.service.js
+│   │   │   ├── task.routes.js
+│   │   │   └── task.validation.js
+│   │   │
+│   │   ├── attendance
+│   │   │   ├── attendance.controller.js
+│   │   │   ├── attendance.service.js
+│   │   │   ├── attendance.routes.js
+│   │   │   └── attendance.validation.js
+│   │   │
+│   │   └── payroll
+│   │       ├── payroll.controller.js
+│   │       ├── payroll.service.js
+│   │       ├── payroll.routes.js
+│   │       └── payroll.validation.js
+│   │
+│   ├── middlewares
+│   │   ├── auth.middleware.js
+│   │   ├── role.middleware.js
+│   │   ├── error.middleware.js
+│   │   └── validate.middleware.js
+│   │
+│   ├── routes
+│   │   └── index.js
+│   │
+│   ├── utils
+│   │   ├── apiError.js
+│   │   ├── jwt.js
+│   │   ├── hash.js
+│   │   └── logger.js
+│   │
+│   ├── app.js
+│   └── server.js
+│
+├── prisma
+│   └── schema.prisma
+│
+├── .env
+├── .gitignore
+├── package.json
+└── README.md
+
+
+
+
+-- 1. التأكد إن hr_user هو المالك الفعلي للداتا بيز
+ALTER DATABASE hr_management_system OWNER TO hr_user;
+
+-- 2. الانتقال للتحكم في الـ Schema (المكان اللي فيه الجداول)
+-- لازم تخلي hr_user هو صاحب الـ public schema
+ALTER SCHEMA public OWNER TO hr_user;
+
+-- 3. إعطاء كل الصلاحيات الممكنة (عشان Prisma ميزعلش)
+GRANT ALL ON SCHEMA public TO hr_user;
+GRANT ALL PRIVILEGES ON DATABASE hr_management_system TO hr_user;
+
+-- 4. خطوة إضافية لضمان إن أي جدول جديد يتكريت يكون له صلاحيات كاملة
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO hr_user;
