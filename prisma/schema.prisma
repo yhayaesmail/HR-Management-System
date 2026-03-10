@@ -30,7 +30,6 @@ model Employee {
   address     String?
   isActive    Boolean      @default(true)
   title       String
-  deduction   Float
   userId      String       @unique
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
