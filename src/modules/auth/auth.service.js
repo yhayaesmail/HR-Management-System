@@ -6,35 +6,33 @@ import {
 } from "../../utils/jwt.js";
 import { unauthorized } from "../../utils/ApiError.js";
 import { hashPassword, comparePassword } from "../../utils/hashing.js";
+import logger from "../../utils/logger.js";
 
 export const login = async ({ email, password }) => {
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
+  const user = await prisma.user.findUnique({ where: { email } });
+
   if (!user) {
+    logger.warn(`Failed login attempt: invalid email - ${email}`);
     throw new unauthorized("Invalid Email Or Password");
   }
+
   const isValidPass = await comparePassword(password, user.password);
   if (!isValidPass) {
-    throw  unauthorized("Invalid Email Or Password");
+    logger.warn(`Failed login attempt: wrong password for email - ${email}`);
+    throw new unauthorized("Invalid Email Or Password");
   }
-  const accessToken = generateAccessToken({
-    id: user.id,
-    role: user.role,
-  });
-  const refreshToken = generateRefreshToken({
-    id: user.id,
-    role: user.role,
-  });
+
+  const accessToken = generateAccessToken({ id: user.id, role: user.role });
+  const refreshToken = generateRefreshToken({ id: user.id, role: user.role });
+
+  logger.info(`User logged in successfully: ${email}`);
+  logger.audit("LOGIN", user.id);
+
   return {
     success: true,
     message: "Login successful",
     data: {
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user.id, email: user.email, role: user.role },
       accessToken,
       refreshToken,
     },
@@ -43,18 +41,22 @@ export const login = async ({ email, password }) => {
 
 export const refreshAccessToken = async (refreshtoken) => {
   if (!refreshtoken) {
-    throw  unauthorized("No Refresh Access Token Provided");
+    logger.warn("Refresh token missing in request");
+    throw new unauthorized("No Refresh Access Token Provided");
   }
+
   const decoded = verifyRefreshToken(refreshtoken);
   const newAccessToken = generateAccessToken({
     id: decoded.id,
     role: decoded.role,
   });
+
+  logger.info(`Access token refreshed for userId: ${decoded.id}`);
+  logger.audit("REFRESH_TOKEN", decoded.id);
+
   return {
     success: true,
     message: "Token Refreshed",
-    data: {
-      accessToken: newAccessToken,
-    },
+    data: { accessToken: newAccessToken },
   };
 };

@@ -2,12 +2,12 @@ import prisma from "./src/config/prisma.js";
 import { hashPassword } from "./src/utils/hashing.js";
 
 async function main() {
-  const password = await hashPassword("MO123456");
+  const password = await hashPassword("yaya123");
   await prisma.user.create({
     data: {
-      email: "MO1@example.com",
+      email: "yaya@example.com",
       password,
-      role: "EMPLOYEE",
+      role: "ADMIN",
     },
   });
   console.log("Admin user created");
