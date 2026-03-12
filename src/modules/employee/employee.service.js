@@ -85,7 +85,12 @@ export const getEmployees = async (query) => {
 export const getEmployeeById = async (id) => {
   const employee = await prisma.employee.findUnique({
     where: { id },
-    include: { user: true, payrolls: true, attendances: true, tasks: true },
+    include: {
+      user: true,
+      payrolls: { orderBy: { createdAt: "desc" }, take: 5 },
+      attendances: { orderBy: { date: "desc" }, take: 10 },
+      tasks: { orderBy: { createdAt: "desc" }, take: 10 },
+    },
   });
   if (!employee) {
     logger.warn(`Attempted to fetch non-existing employee ID: ${id}`);

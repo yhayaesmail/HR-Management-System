@@ -51,6 +51,8 @@ model Attendance {
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
   employee   Employee         @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
 }
 
 model Payroll {
@@ -97,9 +99,10 @@ enum Role {
 }
 
 enum AttendanceStatus {
+  ON_TIME
+  LATE
   PRESENT
   ABSENT
-  LATE
 }
 
 enum TaskStatus {
