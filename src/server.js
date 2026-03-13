@@ -5,7 +5,7 @@ import app from "./app.js";
 const PORT = process.env.PORT || 4500;
 
 app.get("/", (req, res) => {
-  res.send({ message: "Hallo Server is Running" });
+  res.send({ message: "Hallo Server is Functional" });
 });
 
 app.listen(PORT, () => {
