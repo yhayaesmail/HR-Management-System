@@ -1,7 +1,8 @@
-```md
+
+````md
 # HR Management System
 
-![Project Status](https://img.shields.io/badge/Status-Under%20Development-yellow)
+![Project Status](https://img.shields.io/badge/Status-Completed-green)
 ![Node.js](https://img.shields.io/badge/Node.js-16.x-green)
 ![Express](https://img.shields.io/badge/Express-5.x-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.x-blueviolet)
@@ -12,83 +13,115 @@
 
 ## Overview
 
-The **HR Management System** is a backend-focused project that manages employees, authentication, attendance, and user data efficiently.  
-It follows a **modular architecture** for scalability and maintainability, providing a solid foundation for future HR features like payroll and task management.
+The **HR Management System** is a backend-focused project built to manage employees, authentication, attendance, payroll, and task assignments efficiently.  
+The project follows a **modular architecture** to ensure scalability, maintainability, and professional coding standards.  
 
-> ⚠️ Note: Auth, Users, and Attendance modules are fully implemented. Payroll and Tasks modules are under development.
+It includes:
+
+- **Auth module** – secure registration, login, and JWT-based authentication.  
+- **User/Employee management** – CRUD operations with validation and role-based access.  
+- **Attendance tracking** – check-in/check-out and status management.  
+- **Payroll management** – automatic salary calculation based on attendance.  
+- **Task management** – task assignment, priority handling, and employee tracking.
 
 ---
 
 ## Goals
 
-- Secure authentication and authorization using JWT  
-- Employee management (CRUD operations)  
-- Attendance tracking (check-in/check-out)  
-- Modular, maintainable project structure  
-- Foundation for Payroll and Task modules  
+- Implement secure authentication and authorization using JWT.  
+- Provide complete Employee CRUD functionality.  
+- Enable attendance tracking with validations.  
+- Automate payroll calculations for each employee monthly.  
+- Assign and manage tasks with priorities and admin oversight.  
+- Maintain a modular and maintainable project structure.
 
 ---
 
 ## Completed Modules
 
-### Auth
-- Handles registration, login, and JWT authentication  
-- Input validation and structured error handling  
+### 1. Auth
 
-### Users
-- CRUD operations for employee data  
-- Validations and service layer logic  
+- Handles **registration** and **login** for employees and admins.  
+- Generates **JWT access and refresh tokens**.  
+- Middleware for **route protection** and **role-based authorization**.  
+- Input validation using **Joi**.  
+- Structured error handling with **custom APIError class**.  
 
-### Attendance
-- Tracks employee check-in/check-out  
-- Validations and service-based architecture  
+### 2. Employee/User Management
 
-### Middlewares
-- **Authentication** – protects routes  
-- **Role-based** – manages access control  
-- **Error** – central error handling  
-- **Validation** – input validation  
+- CRUD operations for Employee data.  
+- Employee linked to User account (1:1 relation).  
+- Fields include: `name`, `department`, `salary`, `phone`, `address`, `title`.  
+- Admin can **create, update, delete** employees.  
+- Employees can view their own data only.  
 
-### Utils
-- **API Error Handler** – structured error responses  
-- **JWT Utility** – token management  
-- **Hash Utility** – password hashing  
-- **Logger** – event logging  
+### 3. Attendance
 
-### Config
-- **Prisma** – database connection  
-- **Environment Config** – secure environment variables  
+- Track employee **check-in/check-out**.  
+- Automatic status updates: `PRESENT`, `ABSENT`, etc.  
+- Unique constraint on `[employeeId, date]` to prevent duplicates.  
+- CreatedBy / UpdatedBy fields for audit tracking.  
+- Employees see only their own attendance, admins see all.
+
+### 4. Tasks
+
+- Employees can see **tasks assigned to them**, sorted by **priority**.  
+- Admin can **create tasks** for any employee.  
+- Tracks: `status` (TODO/IN_PROGRESS/DONE), `priority` (LOW/MEDIUM/HIGH), `description`, `runningTaskDeadline`.  
+- CreatedBy / UpdatedBy stored to track who assigned/updated the task.  
+
+### 5. Payroll
+
+- Automatically calculates **monthly payroll** based on attendance.  
+- Fields: `baseSalary`, `deduction` (based on absent days), `bonus`, `finalSalary`.  
+- Admin can generate payroll and retrieve **monthly reports**.  
+- Tightly integrated with Employee and Attendance modules.  
 
 ---
 
-## Planned Modules
+## Middlewares
 
-- **Payroll** – automated salary calculations  
-- **Tasks** – assignment, tracking, and management  
+- **Authentication Middleware** – protects private routes using JWT.  
+- **Role-based Middleware** – restricts certain actions to admins only.  
+- **Error Handling Middleware** – centralized error response system.  
+- **Validation Middleware** – validates request bodies using Joi schemas.
+
+---
+
+## Utilities
+
+- **APIError** – structured error responses.  
+- **JWT Utils** – generate and verify access/refresh tokens.  
+- **Hash Utility** – secure password hashing with bcrypt.  
+- **Logger** – logs events and errors for debugging and audit.  
 
 ---
 
 ## Database Structure
 
-Using **PostgreSQL** with **Prisma ORM**, the database schema is organized for multi-module HR management:
+Built with **PostgreSQL** and **Prisma ORM**. Key tables:
 
-- **Users Table** – employee data and credentials  
-- **Auth** – login and registration  
-- **Attendance Table** – check-in/check-out records  
-- **Payroll Table** – planned for salary tracking  
-- **Tasks Table** – planned for task assignments  
+- **User** – login credentials and roles.  
+- **Employee** – personal and job information, linked to User.  
+- **Attendance** – daily check-in/check-out, status, createdBy/updatedBy.  
+- **Tasks** – task assignments with priority, deadlines, and audit fields.  
+- **Payroll** – monthly salary calculations with deductions, bonuses, and final salary.
 
 ---
 
 ## Project Structure
 
-```
-
+```text
 hr-management-system/
 │
 ├── src/
 │   ├── config/          # Prisma and environment configuration
 │   ├── modules/         # Auth, Users, Attendance, Tasks, Payroll
+│   │   ├── auth/
+│   │   ├── employee/
+│   │   ├── attendance/
+│   │   ├── tasks/
+│   │   └── payroll/
 │   ├── middlewares/     # Auth, Role, Error, Validation
 │   ├── routes/          # Main router
 │   ├── utils/           # Error handling, JWT, hashing, logging
@@ -99,31 +132,31 @@ hr-management-system/
 ├── .gitignore
 ├── package.json
 └── README.md
-
 ````
 
 ---
 
 ## Tech Stack
 
-- **Node.js** – backend runtime  
-- **Express.js** – web framework  
-- **PostgreSQL** – relational database  
-- **Prisma** – ORM  
-- **JWT** – authentication  
-- **bcryptjs** – password hashing  
-- **Joi** – input validation  
-- **Winston** – logging  
+* **Node.js** – backend runtime
+* **Express.js** – web framework
+* **PostgreSQL** – relational database
+* **Prisma** – ORM
+* **JWT** – authentication
+* **bcryptjs** – password hashing
+* **Joi** – input validation
+* **Winston** – logging
 
 ---
 
 ## Setup & Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yhayaesmail/hr-management-system.git
 cd hr-management-system
-````
+```
 
 2. Install dependencies:
 
@@ -131,11 +164,12 @@ cd hr-management-system
 npm install
 ```
 
-3. Configure environment variables (`.env`):
+3. Configure environment variables in `.env`:
 
 ```env
-DATABASE_URL=postgresql://username:password@localhost:5432/hr_db
-JWT_SECRET=your_jwt_secret
+DATABASE_URL=postgresql://username:password@localhost:5432/hr_management_system
+JWT_REFRESH_SECRET=YOUR_SECRET
+JWT_ACCESS_SECRET=YOUR_SECRET
 ```
 
 4. Run database migrations and seed data:
@@ -153,11 +187,59 @@ npm run dev
 
 ---
 
+## API Endpoints (Summary)
 
+### Auth
 
-> 💡 **Note:** Auth, Users, and Attendance modules are fully functional. Payroll and Tasks modules are under development. Endpoint documentation will be added when the full project is complete.
+* `POST /api/auth/register` – Register employee
+* `POST /api/auth/login` – Login and get JWT
+* `POST /api/auth/refresh` – Refresh token
 
-```
+### Employee
+
+* `POST /api/employees` – Create employee (Admin)
+* `GET /api/employees` – List all employees
+* `GET /api/employees/:id` – Get employee by ID
+* `PUT /api/employees/:id` – Update employee (Admin)
+* `DELETE /api/employees/:id` – Delete employee (Admin)
+
+### Attendance
+
+* `POST /api/attendance/checkin` – Employee check-in
+* `POST /api/attendance/checkout` – Employee check-out
+* `GET /api/attendance` – List attendance records (Admin)
+
+### Tasks
+
+* `POST /api/tasks` – Assign task (Admin)
+* `GET /api/tasks` – Get employee's tasks sorted by priority
+* `PATCH /api/tasks/:id` – Update task status/priority
+* `DELETE /api/tasks/:id` – Delete task (Admin)
+
+### Payroll
+
+* `POST /api/payroll/generate/:month/:year` – Generate monthly payroll (Admin)
+* `GET /api/payroll/report/:month/:year` – Get monthly payroll report (Admin)
 
 ---
+
+## Notes
+
+* All **createdBy / updatedBy** fields track who performed actions (employee/admin).
+* Employees see only their own data for attendance and tasks.
+* Admins can manage all employees, tasks, and payroll.
+* Modular architecture allows easy expansion (e.g., leaves, performance, notifications).
+
+---
+
+## License
+
+MIT License
+
+---
+
+> ✅ Fully functional backend system with Auth, Users, Attendance, Payroll, and Tasks modules.
+> Ready for production-ready improvements and frontend integration.
+
+```
 
