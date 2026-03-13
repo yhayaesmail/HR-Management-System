@@ -32,6 +32,15 @@ export const createPayroll = async (data, userId) => {
       year: data.year,
       createdBy: userId,
     },
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
+    },
   });
 
   return payroll;
@@ -76,19 +85,31 @@ export const getPayrollById = async (id) => {
 export const getEmployeePayrolls = async (employeeId) => {
   return prisma.payroll.findMany({
     where: { employeeId },
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
+    },
     orderBy: [{ year: "desc" }, { month: "desc" }],
   });
 };
 
-export const getMyPayrolls = async (userId) => {
-  const employee = await prisma.employee.findUnique({
-    where: { userId },
-  });
-  if (!employee) {
-    throw new Error("Employee not found");
-  }
+export const getMyPayrolls = async (employeeId) => {
   return prisma.payroll.findMany({
-    where: { employeeId: employee.id },
+    where: { employeeId },
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
+    },
     orderBy: [{ year: "desc" }, { month: "desc" }],
   });
 };
@@ -112,6 +133,15 @@ export const updatePayroll = async (id, data, userId) => {
       deduction,
       finalSalary,
       updatedBy: userId,
+    },
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
     },
   });
 };

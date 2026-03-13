@@ -64,6 +64,9 @@ export const deleteTask = async (req, res, next) => {
 
 export const getMyTasks = async (req, res, next) => {
   try {
+    if (!req.user.employee) {
+      return res.status(200).json({ success: true, data: [] });
+    }
     const tasks = await taskService.getMyTasks(req.user.employee.id);
     res.json({ success: true, data: tasks });
   } catch (error) {

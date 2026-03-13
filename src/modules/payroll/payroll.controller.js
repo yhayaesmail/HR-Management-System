@@ -52,7 +52,10 @@ export const getEmployeePayrolls = async (req, res, next) => {
 
 export const getMyPayrolls = async (req, res, next) => {
   try {
-    const payrolls = await payrollService.getMyPayrolls(req.user.id);
+    if (!req.user.employee) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+    const payrolls = await payrollService.getMyPayrolls(req.user.employee.id);
     res.json({
       success: true,
       data: payrolls,

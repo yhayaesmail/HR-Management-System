@@ -16,6 +16,15 @@ export const createTask = async (data, userId) => {
       employeeId: data.employeeId,
       createdBy: userId,
     },
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
+    },
   });
 };
 
@@ -30,7 +39,10 @@ export const getAllTasks = async () => {
         },
       },
     },
-    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+    orderBy: [
+      { priority: "desc" },
+      { createdAt: "desc" }
+    ],
   });
 };
 
@@ -38,7 +50,13 @@ export const getTaskById = async (taskId) => {
   const task = await prisma.tasks.findUnique({
     where: { id: taskId },
     include: {
-      employee: true,
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
     },
   });
   if (!task) {
@@ -60,6 +78,15 @@ export const updateTask = async (taskId, data, userId) => {
       ...data,
       updatedBy: userId,
     },
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
+    },
   });
 };
 
@@ -76,9 +103,17 @@ export const changeTaskStatus = async (taskId, status, userId) => {
       status,
       updatedBy: userId,
     },
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
+    },
   });
 };
-
 
 export const deleteTask = async (taskId) => {
   const task = await prisma.tasks.findUnique({
@@ -97,13 +132,37 @@ export const deleteTask = async (taskId) => {
 export const getMyTasks = async (employeeId) => {
   return await prisma.tasks.findMany({
     where: { employeeId },
-    orderBy: [{ priority: "desc" }, { runningTaskDeadline: "asc" }],
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
+    },
+    orderBy: [
+      { priority: "desc" },
+      { runningTaskDeadline: "asc" }
+    ],
   });
 };
 
 export const getEmployeeTasks = async (employeeId) => {
   return await prisma.tasks.findMany({
     where: { employeeId },
-    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+    include: {
+      employee: {
+        select: {
+          id: true,
+          name: true,
+          department: true,
+        },
+      },
+    },
+    orderBy: [
+      { priority: "desc" },
+      { createdAt: "desc" }
+    ],
   });
 };

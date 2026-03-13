@@ -13,13 +13,13 @@ export const login = async ({ email, password }) => {
 
   if (!user) {
     logger.warn(`Failed login attempt: invalid email - ${email}`);
-    throw new unauthorized("Invalid Email Or Password");
+    throw new Error("Invalid Email Or Password");
   }
 
   const isValidPass = await comparePassword(password, user.password);
   if (!isValidPass) {
     logger.warn(`Failed login attempt: wrong password for email - ${email}`);
-    throw new unauthorized("Invalid Email Or Password");
+    throw new Error("Invalid Email Or Password");
   }
 
   const accessToken = generateAccessToken({ id: user.id, role: user.role });
@@ -42,7 +42,7 @@ export const login = async ({ email, password }) => {
 export const refreshAccessToken = async (refreshtoken) => {
   if (!refreshtoken) {
     logger.warn("Refresh token missing in request");
-    throw new unauthorized("No Refresh Access Token Provided");
+    throw new Error("No Refresh Access Token Provided");
   }
 
   const decoded = verifyRefreshToken(refreshtoken);
