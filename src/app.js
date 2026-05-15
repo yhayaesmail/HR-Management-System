@@ -1,11 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import authRoutes from "./modules/auth/auth.routes.js";
-import employeeRoutes from "./modules/employee/employee.routes.js";
-import attendanceRoutes from "./modules/attendance/Attendance.route.js";
-import taskRoutes from "./modules/tasks/tasks.route.js";
-import payrollRoutes from "./modules/payroll/payroll.route.js";
+import apiRoutes from "./routes/index.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -23,11 +19,11 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/api/auth", authRoutes);
-app.use("/api/employees", employeeRoutes);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/tasks", taskRoutes);
-app.use("/api/payroll", payrollRoutes);
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ success: true, message: "HR API is healthy" });
+});
+
+app.use("/api", apiRoutes);
 app.use(errorHandler);
 
 export default app;

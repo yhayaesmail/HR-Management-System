@@ -19,4 +19,4 @@ export const updateEmployeeSchema = Joi.object({
   title: Joi.string().optional(),
   phone: Joi.string().optional(),
   address: Joi.string().optional(),
-});
+}).min(1);

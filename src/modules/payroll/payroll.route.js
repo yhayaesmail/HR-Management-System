@@ -19,13 +19,19 @@ router.post(
   payrollController.createPayroll,
 );
 
-router.get("/", authMiddleware, payrollController.getPayrolls);
+router.get(
+  "/",
+  authMiddleware,
+  authorizeRole("ADMIN"),
+  payrollController.getPayrolls,
+);
 
 router.get("/my", authMiddleware, payrollController.getMyPayrolls);
 
 router.get(
   "/employee/:employeeId",
   authMiddleware,
+  authorizeRole("ADMIN"),
   payrollController.getEmployeePayrolls,
 );
 router.post(

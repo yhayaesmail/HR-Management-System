@@ -1,5 +1,4 @@
 import * as attendanceService from "./Attendance.service.js";
-import ApiError from "../../utils/ApiError.js";
 
 export const checkInController = async (req, res, next) => {
   try {
@@ -28,6 +27,28 @@ export const getEmployeeAttendanceController = async (req, res, next) => {
     const attendance = await attendanceService.getEmployeeAttendance(
       userId,
       query,
+    );
+    res.json({ success: true, ...attendance });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getMyAttendanceController = async (req, res, next) => {
+  try {
+    if (!req.user.employee) {
+      return res.status(200).json({
+        success: true,
+        records: [],
+        total: 0,
+        page: 1,
+        totalPages: 0,
+      });
+    }
+
+    const attendance = await attendanceService.getEmployeeAttendance(
+      req.user.employee.id,
+      req.query,
     );
     res.json({ success: true, ...attendance });
   } catch (err) {

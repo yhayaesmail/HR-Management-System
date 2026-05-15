@@ -35,6 +35,7 @@ export const checkIn = async (userId) => {
       date: start,
       checkIn: now,
       status,
+      createdBy: userId,
     },
   });
   logger.info(`Employee ${employeeId} checked IN`);
@@ -59,7 +60,7 @@ export const checkOut = async (userId) => {
   if (attendance.checkOut) throw new ApiError("You already checked out", 400);
   const updated = await prisma.attendance.update({
     where: { id: attendance.id },
-    data: { checkOut: new Date() },
+    data: { checkOut: new Date(), updatedBy: userId },
   });
   logger.info(`Employee ${employeeId} checked OUT`);
   return updated;

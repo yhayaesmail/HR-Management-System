@@ -13,4 +13,4 @@ export const updatePayrollSchema = Joi.object({
   baseSalary: Joi.number().min(0).optional(),
   bonus: Joi.number().min(0).optional(),
   deduction: Joi.number().min(0).optional(),
-});
+}).min(1);

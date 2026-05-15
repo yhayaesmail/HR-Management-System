@@ -20,7 +20,7 @@ export const getAllTasks = async (req, res, next) => {
 
 export const getTaskById = async (req, res, next) => {
   try {
-    const task = await taskService.getTaskById(req.params.id);
+    const task = await taskService.getTaskById(req.params.id, req.user);
     res.json({ success: true, data: task });
   } catch (error) {
     next(error);
@@ -45,7 +45,7 @@ export const changeTaskStatus = async (req, res, next) => {
     const task = await taskService.changeTaskStatus(
       req.params.id,
       req.body.status,
-      req.user.id,
+      req.user,
     );
     res.json({ success: true, data: task });
   } catch (error) {

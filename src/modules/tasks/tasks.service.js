@@ -1,5 +1,14 @@
 import prisma from "../../config/prisma.js";
-import ApiError from "../../utils/ApiError.js";
+import ApiError, { forbidden } from "../../utils/ApiError.js";
+
+const normalizeTaskStatus = (status) => {
+  const aliases = {
+    PENDING: "TODO",
+    COMPLETED: "DONE",
+  };
+
+  return aliases[status] || status;
+};
 
 export const createTask = async (data, userId) => {
   const employee = await prisma.employee.findUnique({
@@ -10,6 +19,7 @@ export const createTask = async (data, userId) => {
   }
   return await prisma.tasks.create({
     data: {
+      title: data.title ?? data.description.slice(0, 100),
       description: data.description,
       priority: data.priority,
       runningTaskDeadline: data.runningTaskDeadline,
@@ -41,12 +51,12 @@ export const getAllTasks = async () => {
     },
     orderBy: [
       { priority: "desc" },
-      { createdAt: "desc" }
+      { createdAt: "desc" },
     ],
   });
 };
 
-export const getTaskById = async (taskId) => {
+export const getTaskById = async (taskId, currentUser) => {
   const task = await prisma.tasks.findUnique({
     where: { id: taskId },
     include: {
@@ -61,6 +71,12 @@ export const getTaskById = async (taskId) => {
   });
   if (!task) {
     throw new ApiError("Task not found", 404);
+  }
+  if (
+    currentUser.role !== "ADMIN" &&
+    task.employeeId !== currentUser.employee?.id
+  ) {
+    throw forbidden("You can only access tasks assigned to you");
   }
   return task;
 };
@@ -90,18 +106,24 @@ export const updateTask = async (taskId, data, userId) => {
   });
 };
 
-export const changeTaskStatus = async (taskId, status, userId) => {
+export const changeTaskStatus = async (taskId, status, currentUser) => {
   const task = await prisma.tasks.findUnique({
     where: { id: taskId },
   });
   if (!task) {
     throw new ApiError("Task not found", 404);
   }
+  if (
+    currentUser.role !== "ADMIN" &&
+    task.employeeId !== currentUser.employee?.id
+  ) {
+    throw forbidden("You can only update tasks assigned to you");
+  }
   return await prisma.tasks.update({
     where: { id: taskId },
     data: {
-      status,
-      updatedBy: userId,
+      status: normalizeTaskStatus(status),
+      updatedBy: currentUser.id,
     },
     include: {
       employee: {
@@ -143,7 +165,7 @@ export const getMyTasks = async (employeeId) => {
     },
     orderBy: [
       { priority: "desc" },
-      { runningTaskDeadline: "asc" }
+      { runningTaskDeadline: "asc" },
     ],
   });
 };
@@ -162,7 +184,7 @@ export const getEmployeeTasks = async (employeeId) => {
     },
     orderBy: [
       { priority: "desc" },
-      { createdAt: "desc" }
+      { createdAt: "desc" },
     ],
   });
 };

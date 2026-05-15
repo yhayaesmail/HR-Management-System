@@ -26,7 +26,7 @@ export const getPayrolls = async (req, res, next) => {
 
 export const getPayrollById = async (req, res, next) => {
   try {
-    const payroll = await payrollService.getPayrollById(req.params.id);
+    const payroll = await payrollService.getPayrollById(req.params.id, req.user);
     res.json({
       success: true,
       data: payroll,

@@ -1,11 +1,12 @@
 import prisma from "../../config/prisma.js";
+import { badRequest, forbidden, notFound } from "../../utils/ApiError.js";
 
 export const createPayroll = async (data, userId) => {
   const employee = await prisma.employee.findUnique({
     where: { id: data.employeeId },
   });
   if (!employee) {
-    throw new Error("Employee not found");
+    throw notFound("Employee not found");
   }
   const exists = await prisma.payroll.findFirst({
     where: {
@@ -15,7 +16,7 @@ export const createPayroll = async (data, userId) => {
     },
   });
   if (exists) {
-    throw new Error("Payroll already exists for this month");
+    throw badRequest("Payroll already exists for this month");
   }
   const baseSalary = data.baseSalary ?? employee.salary;
   const bonus = data.bonus ?? 0;
@@ -63,7 +64,7 @@ export const getPayrolls = async () => {
   });
 };
 
-export const getPayrollById = async (id) => {
+export const getPayrollById = async (id, currentUser) => {
   const payroll = await prisma.payroll.findUnique({
     where: { id },
     include: {
@@ -77,7 +78,13 @@ export const getPayrollById = async (id) => {
     },
   });
   if (!payroll) {
-    throw new Error("Payroll not found");
+    throw notFound("Payroll not found");
+  }
+  if (
+    currentUser.role !== "ADMIN" &&
+    payroll.employeeId !== currentUser.employee?.id
+  ) {
+    throw forbidden("You can only access your own payroll");
   }
   return payroll;
 };
@@ -119,7 +126,7 @@ export const updatePayroll = async (id, data, userId) => {
     where: { id },
   });
   if (!payroll) {
-    throw new Error("Payroll not found");
+    throw notFound("Payroll not found");
   }
   const baseSalary = data.baseSalary ?? payroll.baseSalary;
   const bonus = data.bonus ?? payroll.bonus;
@@ -151,7 +158,7 @@ export const deletePayroll = async (id) => {
     where: { id },
   });
   if (!payroll) {
-    throw new Error("Payroll not found");
+    throw notFound("Payroll not found");
   }
   await prisma.payroll.delete({
     where: { id },

@@ -1,7 +1,11 @@
-export const validateBody = (schema) => {
+const validate = (source) => (schema) => {
   return async (req, res, next) => {
     try {
-      await schema.validateAsync(req.body, { abortEarly: false });
+      const value = await schema.validateAsync(req[source], {
+        abortEarly: false,
+        stripUnknown: true,
+      });
+      req[source] = value;
       next();
     } catch (err) {
       res.status(400).json({
@@ -12,3 +16,7 @@ export const validateBody = (schema) => {
     }
   };
 };
+
+export const validateBody = validate("body");
+export const validateQuery = validate("query");
+export const validateParams = validate("params");

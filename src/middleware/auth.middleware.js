@@ -14,7 +14,6 @@ export const authMiddleware = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
-    // جلب بيانات الموظف كاملة
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       include: {
@@ -22,8 +21,8 @@ export const authMiddleware = async (req, res, next) => {
       },
     });
 
-    if (!user) {
-      return next(unauthorized("User not found"));
+    if (!user || !user.isActive) {
+      return next(unauthorized("User not found or inactive"));
     }
 
     req.user = {

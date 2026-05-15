@@ -69,6 +69,8 @@ model Payroll {
   updatedAt   DateTime @updatedAt
   employeeId  String
   employee    Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, month, year])
 }
 
 model Tasks {

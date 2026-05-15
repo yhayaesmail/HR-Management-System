@@ -3,12 +3,16 @@ import {
   checkInController,
   checkOutController,
   getEmployeeAttendanceController,
+  getMyAttendanceController,
   getTodayAttendanceController,
 } from "./Attendance.controller.js";
 
 import { authMiddleware } from "../../middleware/auth.middleware.js";
 import { authorizeRole } from "../../middleware/role.middleware.js";
-import { validateBody } from "../../middleware/validate.middleware.js";
+import {
+  validateBody,
+  validateQuery,
+} from "../../middleware/validate.middleware.js";
 import {
   checkInSchema,
   checkOutSchema,
@@ -31,10 +35,17 @@ router.post(
 );
 
 router.get(
+  "/my",
+  authMiddleware,
+  validateQuery(getEmployeeAttendanceSchema),
+  getMyAttendanceController,
+);
+
+router.get(
   "/employee/:id",
   authMiddleware,
   authorizeRole("ADMIN"),
-  validateBody(getEmployeeAttendanceSchema),
+  validateQuery(getEmployeeAttendanceSchema),
   getEmployeeAttendanceController,
 );
 

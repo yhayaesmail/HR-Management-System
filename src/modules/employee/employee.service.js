@@ -1,8 +1,11 @@
 import prisma from "../../config/prisma.js";
 import { hashPassword } from "../../utils/hashing.js";
+import { badRequest, forbidden, notFound } from "../../utils/ApiError.js";
 import logger from "../../utils/logger.js";
 
-export const createEmployee = async (data) => {
+const userPublicSelect = { id: true, email: true, role: true, isActive: true };
+
+export const createEmployee = async (data, actorId) => {
   const existingUser = await prisma.user.findUnique({
     where: { email: data.email },
   });
@@ -10,7 +13,7 @@ export const createEmployee = async (data) => {
     logger.warn(
       `Attempted to create employee with existing email: ${data.email}`,
     );
-    throw new Error("Email Already Existing");
+    throw badRequest("Email already exists");
   }
 
   const hashedPass = await hashPassword(data.password);
@@ -29,8 +32,9 @@ export const createEmployee = async (data) => {
         title: data.title,
         userId: user.id,
         phone: data.phone,
+        createdBy: actorId,
       },
-      include: { user: { select: { id: true, email: true, role: true } } },
+      include: { user: { select: userPublicSelect } },
     });
 
     logger.info(`Employee created: ${employee.name} (ID: ${employee.id})`);
@@ -42,7 +46,16 @@ export const createEmployee = async (data) => {
   return result;
 };
 
-export const getEmployees = async (query) => {
+export const getEmployees = async (query, currentUser) => {
+  if (currentUser.role !== "ADMIN") {
+    if (!currentUser.employee) {
+      return { employees: [], total: 0, totalPages: 0, page: 1 };
+    }
+
+    const employee = await getEmployeeById(currentUser.employee.id, currentUser);
+    return { employees: [employee], total: 1, totalPages: 1, page: 1 };
+  }
+
   const { page = 1, limit = 10, search = "", department, title } = query;
   const where = {
     isActive: true,
@@ -65,7 +78,7 @@ export const getEmployees = async (query) => {
   const [employees, total] = await Promise.all([
     prisma.employee.findMany({
       where,
-      include: { user: { select: { id: true, email: true, role: true } } },
+      include: { user: { select: userPublicSelect } },
       skip,
       take,
       orderBy: { createdAt: "desc" },
@@ -82,11 +95,15 @@ export const getEmployees = async (query) => {
   };
 };
 
-export const getEmployeeById = async (id) => {
+export const getEmployeeById = async (id, currentUser) => {
+  if (currentUser.role !== "ADMIN" && currentUser.employee?.id !== id) {
+    throw forbidden("You can only access your own employee profile");
+  }
+
   const employee = await prisma.employee.findUnique({
     where: { id },
     include: {
-      user: true,
+      user: { select: userPublicSelect },
       payrolls: { orderBy: { createdAt: "desc" }, take: 5 },
       attendances: { orderBy: { date: "desc" }, take: 10 },
       tasks: { orderBy: { createdAt: "desc" }, take: 10 },
@@ -94,20 +111,20 @@ export const getEmployeeById = async (id) => {
   });
   if (!employee) {
     logger.warn(`Attempted to fetch non-existing employee ID: ${id}`);
-    throw new Error("Employee does not exist");
+    throw notFound("Employee does not exist");
   }
   logger.info(`Fetched employee ID: ${id}`);
   return employee;
 };
 
-export const updateEmployee = async (id, data) => {
+export const updateEmployee = async (id, data, actorId) => {
   const employee = await prisma.employee.findUnique({
     where: { id },
     include: { user: true },
   });
   if (!employee) {
     logger.warn(`Attempted to update non-existing employee ID: ${id}`);
-    throw new Error("Employee not found");
+    throw notFound("Employee not found");
   }
   if (data.email && data.email !== employee.user.email) {
     const existingUser = await prisma.user.findUnique({
@@ -117,19 +134,25 @@ export const updateEmployee = async (id, data) => {
       logger.warn(
         `Attempted to update employee ID: ${id} with existing email: ${data.email}`,
       );
-      throw new Error("Sorry Email Already in use");
+      throw badRequest("Email already in use");
     }
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    if (data.email)
+    const { email, ...employeeData } = data;
+
+    if (email)
       await tx.user.update({
         where: { id: employee.user.id },
-        data: { email: data.email },
+        data: { email },
       });
-    const updatedEmployee = await tx.employee.update({ where: { id }, data });
+    const updatedEmployee = await tx.employee.update({
+      where: { id },
+      data: { ...employeeData, updatedBy: actorId },
+      include: { user: { select: userPublicSelect } },
+    });
     logger.info(`Employee updated ID: ${id}`);
-    logger.audit("UPDATE_EMPLOYEE", employee.user.id);
+    logger.audit("UPDATE_EMPLOYEE", actorId);
     return updatedEmployee;
   });
 
@@ -143,11 +166,11 @@ export const deleteEmployee = async (id) => {
   });
   if (!employee) {
     logger.warn(`Attempted to delete non-existing employee ID: ${id}`);
-    throw new Error("Employee does not exist");
+    throw notFound("Employee does not exist");
   }
   if (!employee.isActive) {
     logger.warn(`Attempted to delete already deleted employee ID: ${id}`);
-    throw new Error("Employee is already deleted");
+    throw badRequest("Employee is already deleted");
   }
 
   const result = await prisma.$transaction(async (tx) => {
