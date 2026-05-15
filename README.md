@@ -2,15 +2,6 @@
 ````md
 # HR Management System
 
-![Project Status](https://img.shields.io/badge/Status-Completed-green)
-![Node.js](https://img.shields.io/badge/Node.js-16.x-green)
-![Express](https://img.shields.io/badge/Express-5.x-blue)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.x-blueviolet)
-![Prisma](https://img.shields.io/badge/Prisma-7.x-lightgrey)
-![License](https://img.shields.io/badge/License-MIT-brightgreen)
-
----
-
 ## Overview
 
 The **HR Management System** is a backend-focused project built to manage employees, authentication, attendance, payroll, and task assignments efficiently.  
