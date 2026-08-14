@@ -1,4 +1,3 @@
--- Prevent duplicate payroll records for the same employee/month/year.
 DELETE FROM "Payroll"
 WHERE "id" IN (
   SELECT "id"

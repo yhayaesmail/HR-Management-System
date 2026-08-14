@@ -1,16 +1,11 @@
--- CreateEnum
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'EMPLOYEE');
 
--- CreateEnum
 CREATE TYPE "AttendanceStatus" AS ENUM ('PRESENT', 'ABSENT', 'LATE');
 
--- CreateEnum
 CREATE TYPE "TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'DONE');
 
--- CreateEnum
 CREATE TYPE "TaskPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 
--- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -23,7 +18,6 @@ CREATE TABLE "User" (
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "Employee" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -43,7 +37,6 @@ CREATE TABLE "Employee" (
     CONSTRAINT "Employee_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "Attendance" (
     "id" TEXT NOT NULL,
     "employeeId" TEXT NOT NULL,
@@ -59,7 +52,6 @@ CREATE TABLE "Attendance" (
     CONSTRAINT "Attendance_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "Payroll" (
     "id" TEXT NOT NULL,
     "baseSalary" DOUBLE PRECISION NOT NULL,
@@ -76,7 +68,6 @@ CREATE TABLE "Payroll" (
     CONSTRAINT "Payroll_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "Tasks" (
     "id" TEXT NOT NULL,
     "status" "TaskStatus" NOT NULL DEFAULT 'TODO',
@@ -92,7 +83,6 @@ CREATE TABLE "Tasks" (
     CONSTRAINT "Tasks_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "RefreshToken" (
     "id" TEXT NOT NULL,
     "token" TEXT NOT NULL,
@@ -103,26 +93,18 @@ CREATE TABLE "RefreshToken" (
     CONSTRAINT "RefreshToken_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
--- CreateIndex
 CREATE UNIQUE INDEX "Employee_userId_key" ON "Employee"("userId");
 
--- CreateIndex
 CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
 
--- AddForeignKey
 ALTER TABLE "Employee" ADD CONSTRAINT "Employee_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
 ALTER TABLE "Attendance" ADD CONSTRAINT "Attendance_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "Employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
 ALTER TABLE "Payroll" ADD CONSTRAINT "Payroll_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "Employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
 ALTER TABLE "Tasks" ADD CONSTRAINT "Tasks_employeeId_fkey" FOREIGN KEY ("employeeId") REFERENCES "Employee"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
 ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: hr-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hr_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lolpass}
+      POSTGRES_DB: ${POSTGRES_DB:-hr_management_system}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hr_user} -d ${POSTGRES_DB:-hr_management_system}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    container_name: hr-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hr_user}:${POSTGRES_PASSWORD:-lolpass}@db:5432/${POSTGRES_DB:-hr_management_system}?schema=public
+      PORT: 4500
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-123LOL}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-qwem123ncgj}
+      NODE_ENV: production
+    ports:
+      - "4500:4500"
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  pgdata:
