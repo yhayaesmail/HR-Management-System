@@ -97,6 +97,24 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id])
 }
 
+model Hiring {
+  id           String         @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String         @unique
+  education    String
+  coverLetter  String?
+  graduateYear String
+  dateApplied  DateTime       @default(now())
+  experience   String
+  position     String
+  createdBy    String?
+  updatedBy    String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  status       HiringProgress @default(WAITING)
+}
+
 enum Role {
   ADMIN
   EMPLOYEE
@@ -119,4 +137,11 @@ enum TaskPriority {
   LOW
   MEDIUM
   HIGH
+}
+
+enum HiringProgress {
+  WAITING
+  INTERVIEWED
+  PASSED
+  REJECTED
 }

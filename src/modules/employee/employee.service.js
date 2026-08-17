@@ -117,6 +117,8 @@ export const getEmployeeById = async (id, currentUser) => {
   return employee;
 };
 
+
+
 export const updateEmployee = async (id, data, actorId) => {
   const employee = await prisma.employee.findUnique({
     where: { id },

@@ -4,6 +4,7 @@ import attendanceRoutes from "../modules/attendance/Attendance.route.js";
 import authRoutes from "../modules/auth/auth.routes.js";
 import taskRoutes from "../modules/tasks/tasks.route.js";
 import payrollRoutes from "../modules/payroll/payroll.route.js";
+import hiringRoutes from "../modules/Hiring/Hiring.route.js";
 
 const router = express.Router();
 
@@ -12,5 +13,6 @@ router.use("/employees", employeeRoutes);
 router.use("/attendance", attendanceRoutes);
 router.use("/tasks", taskRoutes);
 router.use("/payroll", payrollRoutes);
+router.use("/hiring", hiringRoutes);
 
 export default router;
