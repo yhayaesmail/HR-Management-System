@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import Layout from "./components/Layout.jsx";
 import Login from "./pages/Login.jsx";
@@ -18,7 +18,7 @@ function RequireAuth({ children }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -37,7 +37,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   );
 }

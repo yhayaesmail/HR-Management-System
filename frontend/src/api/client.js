@@ -1,6 +1,8 @@
 const ACCESS_KEY = "hr_access_token";
 const USER_KEY = "hr_user";
 
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
 let refreshPromise = null;
 
 export const getAccessToken = () => localStorage.getItem(ACCESS_KEY);
@@ -24,7 +26,7 @@ export const clearSession = () => {
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
-    refreshPromise = fetch("/api/auth/refresh", {
+    refreshPromise = fetch(`${API_BASE}/auth/refresh`, {
       method: "POST",
       credentials: "include",
     })
@@ -44,7 +46,7 @@ async function refreshAccessToken() {
 }
 
 export async function api(path, { method = "GET", body, params } = {}) {
-  let url = "/api" + path;
+  let url = API_BASE + path;
   if (params) {
     const qs = new URLSearchParams(
       Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
