@@ -52,7 +52,10 @@ export const getEmployees = async (query, currentUser) => {
       return { employees: [], total: 0, totalPages: 0, page: 1 };
     }
 
-    const employee = await getEmployeeById(currentUser.employee.id, currentUser);
+    const employee = await getEmployeeById(
+      currentUser.employee.id,
+      currentUser,
+    );
     return { employees: [employee], total: 1, totalPages: 1, page: 1 };
   }
 
@@ -116,8 +119,6 @@ export const getEmployeeById = async (id, currentUser) => {
   logger.info(`Fetched employee ID: ${id}`);
   return employee;
 };
-
-
 
 export const updateEmployee = async (id, data, actorId) => {
   const employee = await prisma.employee.findUnique({
