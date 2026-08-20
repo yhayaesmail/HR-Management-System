@@ -203,6 +203,9 @@ async function main() {
   await prisma.employee.deleteMany({
     where: { user: { email: { endsWith: "@example.com" } } },
   });
+  await prisma.refreshToken.deleteMany({
+    where: { user: { email: { endsWith: "@example.com" } } },
+  });
   await prisma.user.deleteMany({
     where: { email: { endsWith: "@example.com" } },
   });
