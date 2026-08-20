@@ -4,19 +4,19 @@ import { hashPassword } from "./src/utils/hashing.js";
 async function main() {
   const password = await hashPassword("admin123");
   await prisma.user.upsert({
-    where: { email: "admin@example.com" },
+    where: { email: "admin@hrm.dev" },
     update: {
       password,
       role: "ADMIN",
       isActive: true,
     },
     create: {
-      email: "admin@example.com",
+      email: "admin@hrm.dev",
       password,
       role: "ADMIN",
     },
   });
-  console.log("Admin user ready: admin@example.com / admin123");
+  console.log("Admin user ready: admin@hrm.dev / admin123");
 }
 
 main()

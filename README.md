@@ -174,7 +174,7 @@ npx prisma generate
 npx prisma migrate deploy        # or: npx prisma migrate dev (dev workflow)
 
 # 4. Seed base + sample data
-node seed.js                     # admin@example.com / admin123
+node seed.js                     # admin@hrm.dev / admin123
 node dataseed.js                 # optional sample employees, payroll, tasks, attendance, hiring
 
 # 5. Start the dev server (auto-restart on change)
@@ -222,7 +222,7 @@ Two standalone scripts (run inside the container with `docker compose exec api n
 
 | Script       | Purpose |
 |--------------|---------|
-| `seed.js`    | Idempotent: creates the admin account (`admin@example.com` / `admin123`). |
+| `seed.js`    | Idempotent: creates the admin account (`admin@hrm.dev` / `admin123`). |
 | `dataseed.js`| Wipes and recreates sample rows: 8 employees with login accounts (`employee123`), current-month payroll, today's attendance, tasks, and hiring applications. |
 
 Example inside Docker:
@@ -340,9 +340,9 @@ The project is deployed and running right now — no setup required:
 | **Frontend (demo UI)** | https://hr-management-system-frontend-brown.vercel.app/ |
 | **Backend (REST API)** | https://hr-management-system-blush.vercel.app/api/health |
 
-**Sign in with:** `admin@example.com` / `admin123`
+**Sign in with:** `admin@hrm.dev` / `admin123`
 
-You can also log in as any seeded employee (e.g. `omar@example.com` / `employee123`) to see the employee-scoped views (own tasks, own attendance, check-in/check-out).
+You can also log in as any seeded employee (e.g. `omar@hrm.dev` / `employee123`) to see the employee-scoped views (own tasks, own attendance, check-in/check-out).
 
 > Note: the free serverless tier spins down after inactivity, so the first request after a pause can take a few seconds to wake up.
 
@@ -364,7 +364,7 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Sign in with `admin@example.com` / `admin123`, or any seeded employee (`omar@example.com` / `employee123`) to see the employee-scoped views.
+Sign in with `admin@hrm.dev` / `admin123`, or any seeded employee (`omar@hrm.dev` / `employee123`) to see the employee-scoped views.
 
 For API-level testing, import the endpoints above into **Postman**, log in to obtain a token, and attach it as a `Bearer` token — no UI required.
 

@@ -6,7 +6,7 @@ const PASSWORD = "employee123";
 const EMPLOYEES = [
   {
     name: "Omar Khaled",
-    email: "omar@example.com",
+    email: "omar@hrm.dev",
     department: "Engineering",
     title: "Senior Developer",
     salary: 3500,
@@ -15,7 +15,7 @@ const EMPLOYEES = [
   },
   {
     name: "Mona Said",
-    email: "mona@example.com",
+    email: "mona@hrm.dev",
     department: "Marketing",
     title: "Marketing Lead",
     salary: 3000,
@@ -24,7 +24,7 @@ const EMPLOYEES = [
   },
   {
     name: "Youssef Tarek",
-    email: "youssef@example.com",
+    email: "youssef@hrm.dev",
     department: "Finance",
     title: "Accountant",
     salary: 2800,
@@ -33,7 +33,7 @@ const EMPLOYEES = [
   },
   {
     name: "Layla Hassan",
-    email: "layla@example.com",
+    email: "layla@hrm.dev",
     department: "Engineering",
     title: "QA Engineer",
     salary: 2600,
@@ -42,7 +42,7 @@ const EMPLOYEES = [
   },
   {
     name: "Karim Adel",
-    email: "karim@example.com",
+    email: "karim@hrm.dev",
     department: "Sales",
     title: "Sales Manager",
     salary: 3200,
@@ -51,7 +51,7 @@ const EMPLOYEES = [
   },
   {
     name: "Nour Mohamed",
-    email: "nour@example.com",
+    email: "nour@hrm.dev",
     department: "HR",
     title: "HR Specialist",
     salary: 2400,
@@ -60,7 +60,7 @@ const EMPLOYEES = [
   },
   {
     name: "Hana Ibrahim",
-    email: "hana@example.com",
+    email: "hana@hrm.dev",
     department: "Operations",
     title: "Operations Analyst",
     salary: 2700,
@@ -69,7 +69,7 @@ const EMPLOYEES = [
   },
   {
     name: "Tamer Fathy",
-    email: "tamer@example.com",
+    email: "tamer@hrm.dev",
     department: "Engineering",
     title: "DevOps Engineer",
     salary: 3300,
@@ -151,10 +151,10 @@ async function main() {
   const hashedPassword = await hashPassword(PASSWORD);
 
   await prisma.user.upsert({
-    where: { email: "admin@example.com" },
+    where: { email: "admin@hrm.dev" },
     update: { role: "ADMIN", isActive: true },
     create: {
-      email: "admin@example.com",
+      email: "admin@hrm.dev",
       password: await hashPassword("admin123"),
       role: "ADMIN",
     },
@@ -200,6 +200,12 @@ async function main() {
   await prisma.tasks.deleteMany({});
   await prisma.payroll.deleteMany({});
   await prisma.hiring.deleteMany({});
+  await prisma.employee.deleteMany({
+    where: { user: { email: { endsWith: "@example.com" } } },
+  });
+  await prisma.user.deleteMany({
+    where: { email: { endsWith: "@example.com" } },
+  });
 
   const now = new Date();
   const year = now.getFullYear();
@@ -276,7 +282,7 @@ async function main() {
 
   console.log(`Seeded ${created.length} employees`);
   console.log(`Seeded attendance, payroll (${month}/${year}), tasks, and hiring applications`);
-  console.log("Admin: admin@example.com / admin123");
+  console.log("Admin: admin@hrm.dev / admin123");
   console.log("Employee logins (password: employee123):");
   for (const e of EMPLOYEES) console.log(`  ${e.email}`);
 }

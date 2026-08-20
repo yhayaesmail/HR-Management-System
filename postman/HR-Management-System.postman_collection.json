@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "HR Management System API",
-    "description": "Complete collection for the HR Management System backend. Import this file, then click POST Auth > Login with admin@example.com / admin123 - the access token is saved automatically and every other request is already authorized. Edit the baseUrl collection variable if your API runs elsewhere.",
+    "description": "Complete collection for the HR Management System backend. Import this file, then click POST Auth > Login with admin@hrm.dev / admin123 - the access token is saved automatically and every other request is already authorized. Edit the baseUrl collection variable if your API runs elsewhere.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -104,7 +104,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}",
+              "raw": "{\n  \"email\": \"admin@hrm.dev\",\n  \"password\": \"admin123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -212,7 +212,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"new.employee@example.com\",\n  \"password\": \"employee123\",\n  \"name\": \"New Employee\",\n  \"department\": \"Engineering\",\n  \"salary\": 3000,\n  \"title\": \"Developer\",\n  \"phone\": \"0100-000-0000\",\n  \"address\": \"Cairo, Egypt\"\n}",
+              "raw": "{\n  \"email\": \"new.employee@hrm.dev\",\n  \"password\": \"employee123\",\n  \"name\": \"New Employee\",\n  \"department\": \"Engineering\",\n  \"salary\": 3000,\n  \"title\": \"Developer\",\n  \"phone\": \"0100-000-0000\",\n  \"address\": \"Cairo, Egypt\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
