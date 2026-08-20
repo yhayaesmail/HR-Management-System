@@ -1,5 +1,11 @@
 {
   "version": 2,
-  "builds": [{ "src": "api/index.js", "use": "@vercel/node" }],
-  "routes": [{ "src": "/(.*)", "dest": "api/index.js" }]
+  "installCommand": "npm ci",
+  "buildCommand": "npx prisma migrate deploy && npx prisma generate",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "prisma/generated/**"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }]
 }
