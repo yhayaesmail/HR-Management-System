@@ -312,6 +312,23 @@ Errors return `{ "success": false, "message": "...", "errors": [...] }` with the
 
 ---
 
+## Live Demo
+
+The project is deployed and running right now — no setup required:
+
+| Piece | URL |
+|---|---|
+| **Frontend (demo UI)** | https://hr-management-system-frontend-brown.vercel.app/ |
+| **Backend (REST API)** | https://hr-management-system-blush.vercel.app/api/health |
+
+**Sign in with:** `admin@example.com` / `admin123`
+
+You can also log in as any seeded employee (e.g. `omar@example.com` / `employee123`) to see the employee-scoped views (own tasks, own attendance, check-in/check-out).
+
+> Note: the free serverless tier spins down after inactivity, so the first request after a pause can take a few seconds to wake up.
+
+---
+
 ## Frontend Demo
 
 > **The `frontend/` folder is a lightweight demo only.** It exists to demonstrate and test the API against the client alongside tools like **Postman** — it is not the deliverable and makes **zero backend changes**.
