@@ -1,4 +1,23 @@
-# HR Management System — Backend API
+<div align="center">
+
+# HR Management System
+
+**Backend REST API for human-resource operations: authentication, employees, attendance, tasks, payroll, and recruiting.**
+
+[![Live Demo](https://img.shields.io/badge/LIVE%20DEMO-Frontend-1a56db?style=for-the-badge&logo=vercel&logoColor=white)](https://hr-management-system-frontend-brown.vercel.app/)
+[![API](https://img.shields.io/badge/API%20Health-Backend-181c22?style=for-the-badge&logo=vercel&logoColor=white)](https://hr-management-system-blush.vercel.app/api/health)
+
+![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Auth-6D9EFF?logo=jsonwebtoken&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
+![MIT License](https://img.shields.io/badge/License-MIT-3e4a5b)
+
+</div>
 
 A production-oriented **Node.js + Express** REST API for human-resource operations: authentication, employee records, attendance, task assignment, monthly payroll, and a public recruiting/hiring intake. Built with a modular architecture, Joi validation, centralized error handling, and Prisma ORM over PostgreSQL.
 
