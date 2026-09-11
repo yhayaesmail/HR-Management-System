@@ -23,6 +23,12 @@ router.post(
 );
 
 router.get(
+  "/progress/:email",
+  validateParams(applicationParamsSchema),
+  hiringController.getApplicationProgress,
+);
+
+router.get(
   "/",
   authMiddleware,
   authorizeRole("ADMIN"),

@@ -33,6 +33,17 @@ export const getApplicationById = async (req, res, next) => {
   }
 };
 
+export const getApplicationProgress = async (req, res, next) => {
+  try {
+    const application = await hiringService.getApplicationProgress(
+      req.params.email,
+    );
+    res.status(200).json({ success: true, data: application });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const proccessApplication = async (req, res, next) => {
   try {
     const application = await hiringService.proccessApplication(

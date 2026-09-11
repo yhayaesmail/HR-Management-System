@@ -86,6 +86,25 @@ export const getApplicationById = async (email, currentUser) => {
   return result;
 };
 
+export const getApplicationProgress = async (email) => {
+  const result = await prisma.hiring.findUnique({
+    where: { email },
+    select: {
+      firstName: true,
+      lastName: true,
+      email: true,
+      position: true,
+      status: true,
+      dateApplied: true,
+    },
+  });
+
+  if (!result) {
+    throw notFound(`No Application For Email ${email}`);
+  }
+  return result;
+};
+
 export const deleteApplication = async (email, currentUser) => {
   if (currentUser.role !== "ADMIN") {
     throw forbidden(`Sorry You Don't Have The Permission To Do That.`);

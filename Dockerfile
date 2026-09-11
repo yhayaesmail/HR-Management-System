@@ -21,7 +21,7 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY package.json ./
 COPY src ./src
-COPY seed.js ./
+COPY seed.js dataseed.js ./
 
 RUN mkdir -p /app/logs && chown -R node:node /app
 
