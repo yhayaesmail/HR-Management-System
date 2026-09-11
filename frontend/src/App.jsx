@@ -8,6 +8,8 @@ import Attendance from "./pages/Attendance.jsx";
 import Payroll from "./pages/Payroll.jsx";
 import Tasks from "./pages/Tasks.jsx";
 import Hiring from "./pages/Hiring.jsx";
+import Apply from "./pages/Apply.jsx";
+import Progress from "./pages/Progress.jsx";
 
 function RequireAuth({ children }) {
   const { user } = useAuth();
@@ -21,6 +23,8 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/applications/apply" element={<Apply />} />
+          <Route path="/applications/progress" element={<Progress />} />
           <Route
             element={
               <RequireAuth>
