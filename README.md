@@ -2,7 +2,7 @@
 
 # HR Management System
 
-**Backend REST API for human-resource operations: authentication, employees, attendance, tasks, payroll, and recruiting.**
+**Backend REST API for human-resource operations: authentication, employees, attendance, tasks, payroll, recruiting, and real-time team chat.**
 
 [![Live Demo](https://img.shields.io/badge/LIVE%20DEMO-Frontend-1a56db?style=for-the-badge&logo=vercel&logoColor=white)](https://hr-management-system-frontend-brown.vercel.app/)
 [![API](https://img.shields.io/badge/API%20Health-Backend-181c22?style=for-the-badge&logo=vercel&logoColor=white)](https://hr-management-system-blush.vercel.app/api/health)
@@ -15,11 +15,10 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
-![MIT License](https://img.shields.io/badge/License-MIT-3e4a5b)
 
 </div>
 
-A production-oriented **Node.js + Express** REST API for human-resource operations: authentication, employee records, attendance, task assignment, monthly payroll, and a public recruiting/hiring intake. Built with a modular architecture, Joi validation, centralized error handling, and Prisma ORM over PostgreSQL.
+A production-oriented **Node.js + Express** REST API for human-resource operations: authentication, employee records, attendance, task assignment, monthly payroll, a public recruiting/hiring intake, and real-time team chat over Socket.io. Built with a modular architecture, Joi validation, centralized error handling, and Prisma ORM over PostgreSQL.
 
 The repository ships with a **lightweight frontend demo** used to exercise and present the API to stakeholders; see the [Frontend demo](#frontend-demo) section — the API itself is the deliverable and is fully consumable with **Postman** or any HTTP client.
 
@@ -42,7 +41,6 @@ The repository ships with a **lightweight frontend demo** used to exercise and p
 - [Error Handling](#error-handling)
 - [Frontend Demo](#frontend-demo)
 - [Development Conventions](#development-conventions)
-- [License](#license)
 
 ---
 
@@ -56,6 +54,7 @@ The repository ships with a **lightweight frontend demo** used to exercise and p
 | **Tasks** | Assign tasks to employees, priority + status lifecycle, `PATCH /status`, scoped reads (`/my`, `/employee/:id`). |
 | **Payroll** | Monthly records with `baseSalary`, `bonus`, `deduction`, `finalSalary`; generation and reporting by month/year; employee self-service via `/my`. |
 | **Hiring** | Public application intake (`POST /`), admin-only review pipeline (list with status filter + pagination, get/update/delete by email). |
+| **Team Chat** | Real-time 1-1 and group messaging over Socket.io. HR/Admin can create groups and send highlighted meeting notices (`MEETING`); employees chat 1-1. History persisted in Postgres with a REST fallback when the socket drops. |
 
 ---
 
@@ -66,6 +65,7 @@ The repository ships with a **lightweight frontend demo** used to exercise and p
 - **JWT** (`jsonwebtoken`) — access + refresh tokens
 - **bcryptjs** — password hashing
 - **Joi** — request validation
+- **Socket.io** — real-time chat (`join`, `message:send`/`message:new`, `typing`), JWT auth on handshake
 - **Winston** — structured logging
 - **Docker / docker-compose** — one-command environment
 
@@ -211,6 +211,8 @@ Managed entirely through Prisma (`prisma/schema.prisma`). Key models:
 - **Tasks** — `title`, `description`, `priority`, `status`, `runningTaskDeadline`, `createdBy`/`updatedBy`.
 - **Payroll** — `baseSalary`, `bonus`, `deduction`, `finalSalary`, `month`, `year`.
 - **Hiring** — public application: `firstName`, `lastName`, `email`, `education`, `graduateYear`, `experience`, `position`, `coverLetter`, `status` (`WAITING`/`INTERVIEWED`/`PASSED`/`REJECTED`).
+- **Conversation** — chat thread (`title`, `isGroup`, `createdBy`) with `ConversationParticipant` rows (`conversationId`, `userId`).
+- **Message** — chat line (`conversationId`, `senderId`, `body`, `type` `TEXT`/`MEETING`, `createdAt`).
 
 Migrations are versioned under `prisma/migrations` and applied with `prisma migrate deploy`.
 
@@ -320,6 +322,18 @@ Errors return `{ "success": false, "message": "...", "errors": [...] }` with the
 | PATCH  | `/hiring/:email`    | ADMIN  | Update status (`WAITING`/`INTERVIEWED`/`PASSED`/`REJECTED`) |
 | DELETE | `/hiring/:email`    | ADMIN  | Delete an application |
 
+### Team Chat
+
+| Method | Endpoint                              | Access | Description |
+|--------|---------------------------------------|--------|-------------|
+| GET    | `/chat/users`                         | Auth   | People you can start a chat with |
+| POST   | `/chat/conversations`                 | Auth   | Start 1-1 or group chat (`participantIds`, `isGroup`, `title`). Groups are ADMIN-only; existing 1-1 is reused |
+| GET    | `/chat/conversations/my`              | Auth   | Your conversations with last-message preview |
+| GET    | `/chat/conversations/:id/messages`    | Member | Message history (participants only) |
+| POST   | `/chat/conversations/:id/messages`    | Member | Send a message (`body`, `type` `TEXT`/`MEETING`). `MEETING` notices are ADMIN-only |
+
+Socket events (same JWT in `auth.token`): `join`, `message:send` → `message:new`, `typing`.
+
 ---
 
 ## Error Handling
@@ -354,7 +368,7 @@ You can also log in as any seeded employee (e.g. `omar@hrm.dev` / `employee123`)
 
 - React + Vite SPA (port `5173`) that proxies `/api` to the backend at `http://localhost:4500`, so it always exercises the real API.
 - Includes **skeleton loading states** so you can visually confirm that data actually flows from the database.
-- Covers every module: login, employees, attendance, payroll, tasks, hiring.
+- Covers every module: login, employees, attendance, payroll, tasks, hiring, team chat (with typing indicator and per-message timestamps).
 
 Quick start:
 
@@ -378,9 +392,3 @@ For API-level testing, import the endpoints above into **Postman**, log in to ob
 - **Audit fields**: `createdBy` / `updatedBy` track who performed each write.
 - **Migrations**: schema changes go through versioned Prisma migrations; `prisma migrate deploy` is the production path.
 - **Secrets**: never commit real secrets; use `.env` (git-ignored) and strong random values.
-
----
-
-## License
-
-MIT
