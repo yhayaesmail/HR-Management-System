@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client.js";
 import {
   PageHeader,
@@ -103,9 +104,9 @@ export default function Hiring() {
             ))}
           </select>
           <div className="spacer" />
-          <a className="btn" href="/api/hiring" target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
-            Public application form (API)
-          </a>
+          <Link className="btn" to="/applications/apply" target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+            Public application form
+          </Link>
         </div>
 
         {!data ? (
