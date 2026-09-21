@@ -237,7 +237,7 @@ export default function Payroll() {
                 ))}
               </select>
             </Field>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="form-row-2">
               <Field label="Base salary (USD)">
                 <input className="input" type="number" min="0" value={form.baseSalary} onChange={set("baseSalary")} required />
               </Field>

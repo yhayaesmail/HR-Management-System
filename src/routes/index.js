@@ -5,6 +5,7 @@ import authRoutes from "../modules/auth/auth.routes.js";
 import taskRoutes from "../modules/tasks/tasks.route.js";
 import payrollRoutes from "../modules/payroll/payroll.route.js";
 import hiringRoutes from "../modules/Hiring/Hiring.route.js";
+import chatRoutes from "../modules/chat/chat.route.js";
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use("/attendance", attendanceRoutes);
 router.use("/tasks", taskRoutes);
 router.use("/payroll", payrollRoutes);
 router.use("/hiring", hiringRoutes);
+router.use("/chat", chatRoutes);
 
 export default router;

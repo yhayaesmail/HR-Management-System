@@ -91,7 +91,6 @@ export async function api(path, { method = "GET", body, params } = {}) {
   try {
     json = await res.json();
   } catch {
-    /* no body */
   }
 
   if (!res.ok || (json && json.success === false)) {

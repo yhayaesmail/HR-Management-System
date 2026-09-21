@@ -236,7 +236,7 @@ export default function Tasks() {
                 </select>
               </Field>
             )}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="form-row-2">
               <Field label="Priority">
                 <select className="select" value={form.priority} onChange={set("priority")}>
                   <option value="LOW">Low</option>

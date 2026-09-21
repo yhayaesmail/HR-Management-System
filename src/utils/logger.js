@@ -34,7 +34,6 @@ try {
     }),
   );
 } catch {
-  // read-only filesystem (e.g. serverless): log to console only
 }
 
 const logger = winston.createLogger({

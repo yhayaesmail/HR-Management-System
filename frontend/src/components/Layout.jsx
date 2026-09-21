@@ -11,6 +11,7 @@ const ADMIN_SECTIONS = [
       { to: "/payroll", label: "Payroll" },
       { to: "/tasks", label: "Tasks" },
       { to: "/hiring", label: "Hiring" },
+      { to: "/chat", label: "Team Chat" },
     ],
   },
 ];
@@ -22,6 +23,7 @@ const EMPLOYEE_SECTIONS = [
       { to: "/", label: "Dashboard" },
       { to: "/attendance", label: "My Attendance" },
       { to: "/tasks", label: "My Tasks" },
+      { to: "/chat", label: "Team Chat" },
     ],
   },
 ];

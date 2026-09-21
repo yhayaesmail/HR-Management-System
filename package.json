@@ -9,6 +9,7 @@
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
+    "socket.io": "^4.8.1",
     "winston": "^3.19.0"
   },
   "name": "hr-management-system",
@@ -20,7 +21,7 @@
   },
   "scripts": {
     "dev": "node --watch --env-file=.env ./src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "start": "node ./src/server.js",
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
@@ -32,6 +33,8 @@
   "type": "module",
   "devDependencies": {
     "dotenv": "^17.3.1",
-    "prisma": "^7.4.2"
+    "jest": "^30.5.2",
+    "prisma": "^7.4.2",
+    "supertest": "^7.2.2"
   }
 }

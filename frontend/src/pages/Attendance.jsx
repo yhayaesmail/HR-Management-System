@@ -25,7 +25,6 @@ export default function Attendance() {
     try {
       setToday(isAdmin ? await api("/attendance/today") : null);
     } catch {
-      /* optional */
     }
   };
 

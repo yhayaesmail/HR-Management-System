@@ -10,6 +10,7 @@ import Tasks from "./pages/Tasks.jsx";
 import Hiring from "./pages/Hiring.jsx";
 import Apply from "./pages/Apply.jsx";
 import Progress from "./pages/Progress.jsx";
+import Chat from "./pages/Chat.jsx";
 
 function RequireAuth({ children }) {
   const { user } = useAuth();
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/hiring" element={<Hiring />} />
+            <Route path="/chat" element={<Chat />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

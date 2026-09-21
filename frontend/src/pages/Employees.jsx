@@ -237,7 +237,7 @@ export default function Employees() {
         >
           <form onSubmit={submit}>
             {formError && <Alert>{formError}</Alert>}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="form-row-2">
               <Field label="Full name">
                 <input className="input" value={form.name} onChange={set("name")} required />
               </Field>

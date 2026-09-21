@@ -17,6 +17,8 @@ model User {
   updatedAt     DateTime       @updatedAt
   employee      Employee?
   refreshTokens RefreshToken[]
+  conversations ConversationParticipant[]
+  messages      Message[]
 }
 
 model Employee {
@@ -144,4 +146,42 @@ enum HiringProgress {
   INTERVIEWED
   PASSED
   REJECTED
+}
+
+model Conversation {
+  id           String                    @id @default(uuid())
+  title        String?
+  isGroup      Boolean                   @default(false)
+  createdBy    String?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  senderId       String
+  body           String
+  type           MessageType  @default(TEXT)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+enum MessageType {
+  TEXT
+  MEETING
 }

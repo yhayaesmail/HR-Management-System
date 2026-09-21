@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { api, clearSession, getUser, setSession } from "../api/client.js";
+import { disconnectSocket } from "../api/socket.js";
 
 const AuthContext = createContext(null);
 
@@ -13,7 +14,19 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("auth:expired", onExpired);
   }, []);
 
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "hr_user" || e.key === "hr_access_token") {
+        disconnectSocket();
+        setUser(getUser());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   const login = async (email, password) => {
+    disconnectSocket();
     const data = await api("/auth/login", {
       method: "POST",
       body: { email, password },
@@ -24,10 +37,10 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    disconnectSocket();
     try {
       await api("/auth/logout", { method: "POST" });
     } catch {
-      /* ignore */
     }
     clearSession();
     setUser(null);
