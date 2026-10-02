@@ -18,9 +18,9 @@
 
 </div>
 
-A production-oriented **Node.js + Express** REST API for human-resource operations: authentication, employee records, attendance, task assignment, monthly payroll, a public recruiting/hiring intake, and real-time team chat over Socket.io. Built with a modular architecture, Joi validation, centralized error handling, and Prisma ORM over PostgreSQL.
+A production-oriented **Node.js + Express** REST API for human-resource operations. It covers authentication, employee records, attendance, task assignment, monthly payroll, a public recruiting/hiring intake, and real-time team chat over Socket.io, built on a modular architecture with Joi validation, centralized error handling, and Prisma ORM over PostgreSQL.
 
-The repository ships with a **lightweight frontend demo** used to exercise and present the API to stakeholders; see the [Frontend demo](#frontend-demo) section — the API itself is the deliverable and is fully consumable with **Postman** or any HTTP client.
+The repository also ships a **lightweight frontend demo** used to exercise and present the API to stakeholders (see [Frontend Demo](#frontend-demo)). The API itself is the deliverable and is fully consumable with the bundled **Postman** collection or any HTTP client.
 
 ---
 
@@ -36,9 +36,11 @@ The repository ships with a **lightweight frontend demo** used to exercise and p
 - [Environment Variables](#environment-variables)
 - [Database Schema](#database-schema)
 - [Seeding](#seeding)
+- [Testing](#testing)
 - [Authentication & Authorization](#authentication--authorization)
 - [API Reference](#api-reference)
 - [Error Handling](#error-handling)
+- [Live Demo](#live-demo)
 - [Frontend Demo](#frontend-demo)
 - [Development Conventions](#development-conventions)
 
@@ -67,7 +69,9 @@ The repository ships with a **lightweight frontend demo** used to exercise and p
 - **Joi** — request validation
 - **Socket.io** — real-time chat (`join`, `message:send`/`message:new`, `typing`), JWT auth on handshake
 - **Winston** — structured logging
+- **Jest** + **Supertest** — API-level integration tests (`tests/`)
 - **Docker / docker-compose** — one-command environment
+- **Vercel** — serverless deployment of the API (entrypoint in `api/index.js`)
 
 ---
 
@@ -85,13 +89,13 @@ src/modules/<feature>/
 
 All modules share:
 
-- `src/middlewares/authMiddleware.js` — verifies the JWT access token
-- `src/middlewares/authorizeRole.js` — role-based guards (`ADMIN`)
-- `src/middlewares/validate.middleware.js` — Joi validation for `body`, `query`, `params`
-- `src/middlewares/errorHandler.js` + `src/utils/APIError.js` — centralized, structured errors
-- `src/utils/` — `jwtUtils`, `hashing`, `logger`, `asyncHandler`
+- `src/middleware/auth.middleware.js` — verifies the JWT access token
+- `src/middleware/role.middleware.js` — role-based guards (`ADMIN`)
+- `src/middleware/validate.middleware.js` — Joi validation for `body`, `query`, `params`
+- `src/middleware/error.middleware.js` + `src/utils/ApiError.js` — centralized, structured errors
+- `src/utils/` — `jwt`, `hashing`, `logger`
 
-Controllers stay thin; all business rules live in services, keeping them independently testable.
+Controllers stay thin, and all business rules live in services. That keeps each module independently testable, which is what the `tests/` suite relies on.
 
 ---
 
@@ -103,39 +107,67 @@ hr-management-system/
 ├── src/
 │   ├── config/
 │   │   └── prisma.js              # Prisma client singleton
-│   ├── middlewares/
-│   │   ├── authMiddleware.js
-│   │   ├── authorizeRole.js
-│   │   ├── errorHandler.js
+│   ├── middleware/
+│   │   ├── auth.middleware.js
+│   │   ├── role.middleware.js
+│   │   ├── error.middleware.js
 │   │   └── validate.middleware.js
 │   ├── modules/
 │   │   ├── auth/                  # auth.routes.js, auth.service.js, ...
 │   │   ├── employee/
 │   │   ├── attendance/
 │   │   ├── tasks/
-│   │   ├── payroll/
-│   │   └── Hiring/                # hiring.service.js, controller, route, validation
+│   │   ├── payroll/               # + payroll.helper.js
+│   │   ├── Hiring/                # hiring.service.js, controller, route, validation
+│   │   └── chat/                  # Socket.io gateway behind the chat routes
 │   ├── routes/
 │   │   └── index.js               # mounts all modules under /api
+│   ├── socket/
+│   │   └── socket.js              # Socket.io server, JWT auth on handshake
 │   ├── utils/
-│   │   ├── APIError.js
-│   │   ├── asyncHandler.js
+│   │   ├── ApiError.js
+│   │   ├── errorHandler.js
 │   │   ├── hashing.js
-│   │   ├── jwtUtils.js
+│   │   ├── jwt.js
 │   │   └── logger.js
 │   ├── app.js                     # express app assembly
 │   └── server.js                  # entry point
+│
+├── api/
+│   └── index.js                   # Vercel serverless entrypoint (re-exports src/app.js)
+│
 ├── prisma/
 │   ├── schema.prisma
 │   └── migrations/                # versioned SQL migrations
+│
+├── tests/                         # Jest + Supertest API-level tests
+│   ├── helpers.js
+│   ├── api.test.js
+│   ├── auth.test.js
+│   ├── attendance.test.js
+│   ├── attendance-guards.test.js
+│   ├── chat.test.js
+│   └── payroll.test.js
+│
+├── postman/
+│   └── HR-Management-System.postman_collection.json
+│
 ├── frontend/                      # lite demo UI (see "Frontend Demo")
-├── docker-compose.yml
+├── public/                        # static-asset placeholder (currently empty)
+│
 ├── Dockerfile
+├── docker-compose.yml
+├── vercel.json
+├── jest.config.cjs
+├── prisma.config.ts
 ├── seed.js                        # creates the admin user
 ├── dataseed.js                    # sample employees/payroll/tasks/attendance/hiring
-├── prisma.config.ts
+├── test.js                        # manual smoke check (npm test uses tests/ instead)
+├── .env.example
 └── package.json
 ```
+
+> `logs/` is generated at runtime by Winston and is git-ignored, so it is not part of the source tree.
 
 ---
 
@@ -143,7 +175,7 @@ hr-management-system/
 
 ### Option A: Docker Compose (recommended)
 
-Run the API, its PostgreSQL database, and migrations with one command:
+Start the API, its PostgreSQL database, and its migrations with one command:
 
 ```bash
 docker compose up -d --build
@@ -203,7 +235,7 @@ The server starts on the `PORT` in `.env` (default `4500`).
 
 ## Database Schema
 
-Managed entirely through Prisma (`prisma/schema.prisma`). Key models:
+The schema is managed entirely through Prisma (`prisma/schema.prisma`). Key models:
 
 - **User** — credentials (`email`, `password`), `role` (`ADMIN`/`EMPLOYEE`), `isActive`.
 - **Employee** — HR record (`name`, `department`, `title`, `salary`, `phone`, `address`), `userId` unique FK → User.
@@ -220,7 +252,7 @@ Migrations are versioned under `prisma/migrations` and applied with `prisma migr
 
 ## Seeding
 
-Two standalone scripts (run inside the container with `docker compose exec api node <script>`):
+Two standalone scripts seed the database. Run them inside the container with `docker compose exec api node <script>`:
 
 | Script       | Purpose |
 |--------------|---------|
@@ -236,11 +268,35 @@ docker compose exec api node dataseed.js
 
 ---
 
+## Testing
+
+The suite is Jest + Supertest, driven against the real Express app and a live database. Jest picks up only `**/tests/**/*.test.js` (see `jest.config.cjs`), so `npm test` runs:
+
+```bash
+npm test
+```
+
+| Test file | Covers |
+|---|---|
+| `tests/api.test.js` | Health endpoint and baseline app wiring |
+| `tests/auth.test.js` | Login, refresh, logout, and token rotation |
+| `tests/attendance.test.js` | Check-in / check-out, auto status, `(employeeId, date)` dedupe |
+| `tests/attendance-guards.test.js` | Employee-scoped access — one employee cannot read another's records |
+| `tests/payroll.test.js` | Monthly generation, reporting, and `finalSalary` computation |
+| `tests/chat.test.js` | Conversation creation and message history permissions |
+| `tests/helpers.js` | Shared setup: DB client, tokens, fixtures |
+
+Tests run serially (`--runInBand`) against a reachable `DATABASE_URL`, so point it at a scratch database before running.
+
+> `test.js` in the repo root is a separate manual smoke check (`node test.js`) that only exercises the login service. It is not part of `npm test`.
+
+---
+
 ## Authentication & Authorization
 
 - **Access token** (JWT, ~10 min) is returned in the login response body and must be sent as `Authorization: Bearer <token>` on protected routes.
 - **Refresh token** is set as an HTTP-only cookie (`httpOnly: true`) on login and rotated via `POST /api/auth/refresh`.
-- **Role guards**: admin-only routes use `authMiddleware` + `authorizeRole("ADMIN")`. Employee-scoped routes (`/my`, `/employee/:id`) resolve records through `req.user` so users can never read another employee's data.
+- **Role guards**: admin-only routes use `auth.middleware` + `role.middleware("ADMIN")`. Employee-scoped routes (`/my`, `/employee/:id`) resolve records through `req.user` so users can never read another employee's data.
 - Passwords are hashed with bcrypt; never stored or returned in plaintext.
 
 ---
@@ -248,6 +304,8 @@ docker compose exec api node dataseed.js
 ## API Reference
 
 Base URL: `http://localhost:4500/api` (or `http://localhost:5173/api` through the frontend dev proxy).
+
+A ready-made collection for every endpoint below is committed at `postman/HR-Management-System.postman_collection.json`.
 
 All responses follow a consistent envelope:
 
@@ -341,7 +399,7 @@ Socket events (same JWT in `auth.token`): `join`, `message:send` → `message:ne
 - Controllers throw `APIError(statusCode, message, details)`; a global `errorHandler` middleware formats the response and logs it via Winston.
 - Joi validation failures surface as `400` with a machine-readable `errors` array.
 - Prisma known-request errors are mapped to `404`/`409` where appropriate (e.g. duplicate email, missing record).
-- Async route handlers are wrapped with `asyncHandler` so rejected promises always reach the error middleware.
+- Async route handlers are wrapped in `try/catch` by each controller so rejected promises always reach the error middleware.
 
 ---
 
@@ -386,7 +444,7 @@ For API-level testing, import the endpoints above into **Postman**, log in to ob
 
 ## Development Conventions
 
-- **Vertical-slice modules**: service / controller / route / validation per feature; shared concerns live in `middlewares/` and `utils/`.
+- **Vertical-slice modules**: service / controller / route / validation per feature; shared concerns live in `middleware/` and `utils/`.
 - **Thin controllers**: validation + role checks are handled by middleware; services own all business logic.
 - **Validation everywhere**: every `body`, `query`, and `params` shape is defined by a Joi schema.
 - **Audit fields**: `createdBy` / `updatedBy` track who performed each write.
