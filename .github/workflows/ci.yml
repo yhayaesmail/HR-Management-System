@@ -46,11 +46,17 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      - name: Seed database
+        run: node seed.js
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Run tests
         run: npm test
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
           NODE_ENV: ${{ secrets.NODE_ENV }}
 
       - name: Validate Prisma schema
