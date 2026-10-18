@@ -14,7 +14,7 @@ import {
 
 export default function Attendance() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "COMPANY_ADMIN";
   const [today, setToday] = useState(null);
   const [records, setRecords] = useState(null);
   const [error, setError] = useState("");

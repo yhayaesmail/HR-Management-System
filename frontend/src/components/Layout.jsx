@@ -32,7 +32,7 @@ export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const sections = user?.role === "ADMIN" ? ADMIN_SECTIONS : EMPLOYEE_SECTIONS;
+  const sections = user?.role === "COMPANY_ADMIN" ? ADMIN_SECTIONS : EMPLOYEE_SECTIONS;
 
   const handleLogout = async () => {
     await logout();
@@ -63,7 +63,7 @@ export default function Layout() {
           ))}
         </nav>
         <div className="sidebar-footer">
-          <div className="role-tag">{user?.role === "ADMIN" ? "Admin" : "Employee"}</div>
+          <div className="role-tag">{user?.role === "COMPANY_ADMIN" ? "Admin" : "Employee"}</div>
           <div className="user-email">{user?.email}</div>
           <button className="btn btn-sm" onClick={handleLogout}>
             Sign out

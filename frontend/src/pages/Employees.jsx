@@ -28,7 +28,7 @@ const EMPTY_FORM = {
 
 export default function Employees() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "COMPANY_ADMIN";
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [query, setQuery] = useState({ page: 1, limit: 10, search: "" });

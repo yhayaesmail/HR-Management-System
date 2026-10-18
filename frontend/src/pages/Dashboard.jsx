@@ -22,7 +22,7 @@ const statusTone = {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "COMPANY_ADMIN";
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 

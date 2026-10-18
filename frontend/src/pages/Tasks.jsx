@@ -23,7 +23,7 @@ const EMPTY_FORM = {
 
 export default function Tasks() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "COMPANY_ADMIN";
   const [data, setData] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [error, setError] = useState("");

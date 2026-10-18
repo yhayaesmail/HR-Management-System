@@ -6,7 +6,7 @@ import { PageHeader, Card, Badge, Empty, Alert, Field, Modal, formatDateTime } f
 
 export default function Chat() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "COMPANY_ADMIN";
   const [conversations, setConversations] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [messages, setMessages] = useState([]);
