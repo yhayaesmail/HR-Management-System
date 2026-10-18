@@ -14,7 +14,7 @@ describe("hiring", () => {
   let adminUser;
 
   beforeAll(async () => {
-    adminUser = await makeUser("ADMIN");
+    adminUser = await makeUser("COMPANY_ADMIN");
     admin = adminUser.user;
     ids.push(admin.id);
   });
@@ -36,20 +36,20 @@ describe("hiring", () => {
   };
 
   test("public submits an application", async () => {
-    const app = await receiveApplications(appData);
+    const app = await receiveApplications(appData, admin.companyId);
     expect(app.id).toBeDefined();
     expect(app.email).toBe(appData.email);
     expect(app.status).toBe("WAITING");
   });
 
   test("duplicate email throws 400", async () => {
-    await expect(receiveApplications(appData)).rejects.toMatchObject({
+    await expect(receiveApplications(appData, admin.companyId)).rejects.toMatchObject({
       statusCode: 400,
     });
   });
 
   test("getApplicationProgress returns public info", async () => {
-    const progress = await getApplicationProgress(appData.email);
+    const progress = await getApplicationProgress(appData.email, admin.companyId);
     expect(progress.email).toBe(appData.email);
     expect(progress.status).toBe("WAITING");
     expect(progress.position).toBe(appData.position);
@@ -57,12 +57,12 @@ describe("hiring", () => {
 
   test("getApplicationProgress throws 404 for unknown email", async () => {
     await expect(
-      getApplicationProgress("nonexistent@hrm.dev"),
+      getApplicationProgress("nonexistent@hrm.dev", admin.companyId),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
   test("ADMIN lists applications", async () => {
-    const result = await getApplications({ page: 1, limit: 10 }, admin);
+    const result = await getApplications({ page: 1, limit: 10 }, admin, admin.companyId);
     expect(result.applications).toBeDefined();
     expect(Array.isArray(result.applications)).toBe(true);
     expect(result.total).toBeGreaterThanOrEqual(1);
@@ -73,6 +73,7 @@ describe("hiring", () => {
     const result = await getApplications(
       { page: 1, limit: 10, status: "WAITING" },
       admin,
+      admin.companyId,
     );
     expect(
       result.applications.every((a) => a.status === "WAITING"),
@@ -88,7 +89,7 @@ describe("hiring", () => {
   });
 
   test("ADMIN gets application by email", async () => {
-    const app = await getApplicationById(appData.email, admin);
+    const app = await getApplicationById(appData.email, admin, admin.companyId);
     expect(app.email).toBe(appData.email);
   });
 
@@ -105,6 +106,7 @@ describe("hiring", () => {
       appData.email,
       "INTERVIEWED",
       admin,
+      admin.companyId,
     );
     expect(updated.status).toBe("INTERVIEWED");
   });
@@ -119,7 +121,7 @@ describe("hiring", () => {
 
   test("proccessApplication throws 404 for unknown email", async () => {
     await expect(
-      proccessApplication("nonexistent@hrm.dev", "REJECTED", admin),
+      proccessApplication("nonexistent@hrm.dev", "REJECTED", admin, admin.companyId),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
@@ -132,7 +134,7 @@ describe("hiring", () => {
       graduateYear: "2018",
       experience: "1 year",
       position: "Intern",
-    });
+    }, admin.companyId);
     // use a fresh email for delete test
     const delData = {
       firstName: "Delete",
@@ -143,14 +145,14 @@ describe("hiring", () => {
       experience: "1 year",
       position: "Intern",
     };
-    await receiveApplications(delData);
-    const result = await deleteApplication(delData.email, admin);
+    await receiveApplications(delData, admin.companyId);
+    const result = await deleteApplication(delData.email, admin, admin.companyId);
     expect(result.email).toBe(delData.email);
   });
 
   test("deleteApplication throws 404 for unknown email", async () => {
     await expect(
-      deleteApplication("nonexistent@hrm.dev", admin),
+      deleteApplication("nonexistent@hrm.dev", admin, admin.companyId),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

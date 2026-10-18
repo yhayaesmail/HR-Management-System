@@ -14,7 +14,7 @@ const router = express.Router();
 router.post(
   "/",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateBody(createTaskSchema),
   taskController.createTask,
 );
@@ -22,7 +22,7 @@ router.post(
 router.get(
   "/",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   taskController.getAllTasks,
 );
 
@@ -31,7 +31,7 @@ router.get("/my", authMiddleware, taskController.getMyTasks);
 router.get(
   "/employee/:employeeId",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   taskController.getEmployeeTasks,
 );
 
@@ -40,7 +40,7 @@ router.get("/:id", authMiddleware, taskController.getTaskById);
 router.put(
   "/:id",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateBody(updateTaskSchema),
   taskController.updateTask,
 );
@@ -55,7 +55,7 @@ router.patch(
 router.delete(
   "/:id",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   taskController.deleteTask,
 );
 

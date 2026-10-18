@@ -13,7 +13,7 @@ describe("chat", () => {
   let outsider;
 
   beforeAll(async () => {
-    admin = await makeUser("ADMIN");
+    admin = await makeUser("COMPANY_ADMIN");
     empA = await makeUser("EMPLOYEE");
     empB = await makeUser("EMPLOYEE");
     outsider = await makeUser("EMPLOYEE");
@@ -31,27 +31,28 @@ describe("chat", () => {
     const c = await createConversation(
       { participantIds: [empB.user.id] },
       me(empA),
+      empA.companyId,
     );
     expect(c.participants).toHaveLength(2);
   });
 
   test("reuses existing 1-1 conversation", async () => {
-    const first = await createConversation({ participantIds: [empB.user.id] }, me(empA));
-    const second = await createConversation({ participantIds: [empB.user.id] }, me(empA));
+    const first = await createConversation({ participantIds: [empB.user.id] }, me(empA), empA.companyId);
+    const second = await createConversation({ participantIds: [empB.user.id] }, me(empA), empA.companyId);
     expect(second.id).toBe(first.id);
   });
 
   test("outsider cannot read messages", async () => {
-    const c = await createConversation({ participantIds: [empB.user.id] }, me(empA));
-    await expect(getMessages(c.id, me(outsider))).rejects.toMatchObject({
+    const c = await createConversation({ participantIds: [empB.user.id] }, me(empA), empA.companyId);
+    await expect(getMessages(c.id, me(outsider), outsider.companyId)).rejects.toMatchObject({
       statusCode: 403,
     });
   });
 
   test("employee cannot send meeting notice", async () => {
-    const c = await createConversation({ participantIds: [empB.user.id] }, me(empA));
+    const c = await createConversation({ participantIds: [empB.user.id] }, me(empA), empA.companyId);
     await expect(
-      sendMessage(c.id, { body: "Meet at 10", type: "MEETING" }, me(empA)),
+      sendMessage(c.id, { body: "Meet at 10", type: "MEETING" }, me(empA), empA.companyId),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
@@ -59,14 +60,16 @@ describe("chat", () => {
     const c = await createConversation(
       { participantIds: [empA.user.id], isGroup: true, title: "Team" },
       me(admin),
+      admin.companyId,
     );
     const m = await sendMessage(
       c.id,
       { body: "Meeting Sunday 10am", type: "MEETING" },
       me(admin),
+      admin.companyId,
     );
     expect(m.type).toBe("MEETING");
-    const history = await getMessages(c.id, me(empA));
+    const history = await getMessages(c.id, me(empA), empA.companyId);
     expect(history.map((x) => x.id)).toContain(m.id);
   });
 });

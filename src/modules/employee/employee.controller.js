@@ -3,7 +3,7 @@ import * as employeeService from "./employee.service.js";
 
 export const createEmployee = async (req, res, next) => {
   try {
-    const employee = await employeeService.createEmployee(req.body, req.user.id);
+    const employee = await employeeService.createEmployee(req.body, req.user.id, req.companyId);
     res.status(201).json({ success: true, data: employee });
   } catch (err) {
     next(err);
@@ -12,7 +12,7 @@ export const createEmployee = async (req, res, next) => {
 
 export const getEmployees = async (req, res, next) => {
   try {
-    const employees = await employeeService.getEmployees(req.query, req.user);
+    const employees = await employeeService.getEmployees(req.query, req.user, req.companyId);
     res.status(200).json({ success: true, ...employees });
   } catch (err) {
     next(err);
@@ -24,6 +24,7 @@ export const getEmployeeById = async (req, res, next) => {
     const employee = await employeeService.getEmployeeById(
       req.params.id,
       req.user,
+      req.companyId,
     );
     res.status(200).json({ success: true, data: employee });
   } catch (err) {
@@ -37,6 +38,7 @@ export const updateEmployee = async (req, res, next) => {
       req.params.id,
       req.body,
       req.user.id,
+      req.companyId,
     );
     res.status(200).json({ success: true, data: updatedEmployee });
   } catch (err) {
@@ -46,7 +48,7 @@ export const updateEmployee = async (req, res, next) => {
 
 export const deleteEmployee = async (req, res, next) => {
   try {
-    const deletedEmployee = await employeeService.deleteEmployee(req.params.id);
+    const deletedEmployee = await employeeService.deleteEmployee(req.params.id, req.companyId);
     res.status(200).json({ success: true, data: deletedEmployee });
   } catch (err) {
     next(err);
@@ -55,7 +57,7 @@ export const deleteEmployee = async (req, res, next) => {
 
 export const deleteAllEmployees = async (req, res, next) => {
   try {
-    const result = await employeeService.deleteAllEmployees();
+    const result = await employeeService.deleteAllEmployees(req.companyId);
     res.status(200).json({ success: true, data: result });
   } catch (err) {
     next(err);

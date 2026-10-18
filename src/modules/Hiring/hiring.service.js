@@ -2,9 +2,9 @@ import prisma from "../../config/prisma.js";
 import logger from "../../utils/logger.js";
 import { badRequest, forbidden, notFound } from "../../utils/ApiError.js";
 
-export const receiveApplications = async (data) => {
+export const receiveApplications = async (data, companyId) => {
   const existingEmail = await prisma.hiring.findFirst({
-    where: { email: data.email },
+    where: { email: data.email, companyId },
   });
   if (existingEmail) {
     logger.warn(`Tring to make Apolication with Existing Email`);
@@ -16,6 +16,7 @@ export const receiveApplications = async (data) => {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
+      companyId,
       education: data.education,
       coverLetter: data.coverLetter,
       graduateYear: data.graduateYear,
@@ -25,12 +26,12 @@ export const receiveApplications = async (data) => {
   });
 };
 
-export const getApplications = async (query, currentUser) => {
-  if (currentUser.role !== "ADMIN") {
+export const getApplications = async (query, currentUser, companyId) => {
+  if (currentUser.role !== "COMPANY_ADMIN" && currentUser.role !== "SUPER_ADMIN") {
     throw forbidden(`Sorry You Have No Access To The Applications `);
   }
   const { page = 1, limit = 10, status } = query;
-  const where = { ...(status ? { status } : {}) };
+  const where = { companyId, ...(status ? { status } : {}) };
   const skip = (Number(page) - 1) * Number(limit);
 
   const [applications, total] = await Promise.all([
@@ -52,31 +53,31 @@ export const getApplications = async (query, currentUser) => {
   };
 };
 
-export const proccessApplication = async (email, status, currentUser) => {
-  if (currentUser.role !== "ADMIN") {
+export const proccessApplication = async (email, status, currentUser, companyId) => {
+  if (currentUser.role !== "COMPANY_ADMIN" && currentUser.role !== "SUPER_ADMIN") {
     throw forbidden(`Sorry You Don't Have The Permission To Do That.`);
   }
   const application = await prisma.hiring.findUnique({
-    where: { email },
+    where: { companyId_email: { companyId, email } },
   });
   if (!application) {
     throw notFound(`No Appication Found To This Email`);
   }
 
   const update = await prisma.hiring.update({
-    where: { email },
+    where: { companyId_email: { companyId, email } },
     data: { status, updatedBy: currentUser.id },
   });
   logger.info(`Application for Email ${email} Updated Successfuly`);
   return update;
 };
 
-export const getApplicationById = async (email, currentUser) => {
-  if (currentUser.role !== "ADMIN") {
+export const getApplicationById = async (email, currentUser, companyId) => {
+  if (currentUser.role !== "COMPANY_ADMIN" && currentUser.role !== "SUPER_ADMIN") {
     throw forbidden(`Sorry You Don't Have The Permission To Do That.`);
   }
   const result = await prisma.hiring.findUnique({
-    where: { email },
+    where: { companyId_email: { companyId, email } },
   });
 
   if (!result) {
@@ -86,9 +87,9 @@ export const getApplicationById = async (email, currentUser) => {
   return result;
 };
 
-export const getApplicationProgress = async (email) => {
+export const getApplicationProgress = async (email, companyId) => {
   const result = await prisma.hiring.findUnique({
-    where: { email },
+    where: { companyId_email: { companyId, email } },
     select: {
       firstName: true,
       lastName: true,
@@ -105,18 +106,18 @@ export const getApplicationProgress = async (email) => {
   return result;
 };
 
-export const deleteApplication = async (email, currentUser) => {
-  if (currentUser.role !== "ADMIN") {
+export const deleteApplication = async (email, currentUser, companyId) => {
+  if (currentUser.role !== "COMPANY_ADMIN" && currentUser.role !== "SUPER_ADMIN") {
     throw forbidden(`Sorry You Don't Have The Permission To Do That.`);
   }
   const result = await prisma.hiring.findUnique({
-    where: { email },
+    where: { companyId_email: { companyId, email } },
   });
   if (!result) {
     throw notFound(`No Application For Email ${email}`);
   }
   const del = await prisma.hiring.delete({
-    where: { email },
+    where: { companyId_email: { companyId, email } },
   });
     logger.info(`delete Application ${email} by ${currentUser.id}`);
   return del;

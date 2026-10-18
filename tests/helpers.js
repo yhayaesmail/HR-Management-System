@@ -2,22 +2,37 @@ import prisma from "../src/config/prisma.js";
 import { hashPassword } from "../src/utils/hashing.js";
 
 let n = 0;
+let defaultCompany = null;
+
+const getDefaultCompany = async () => {
+  if (defaultCompany) return defaultCompany;
+  defaultCompany = await prisma.company.findUnique({ where: { slug: "default" } });
+  if (!defaultCompany) {
+    defaultCompany = await prisma.company.create({
+      data: { name: "Default Company", slug: "default" },
+    });
+  }
+  return defaultCompany;
+};
 
 export const makeUser = async (role = "EMPLOYEE", active = true) => {
   n += 1;
   const email = `tst_${Date.now()}_${n}@hrm.dev`;
+  const company = await getDefaultCompany();
   const user = await prisma.user.create({
     data: {
       email,
       password: await hashPassword("password123"),
       role,
       isActive: active,
+      companyId: company.id,
     },
   });
-  return { user, password: "password123", email };
+  return { user, password: "password123", email, companyId: company.id };
 };
 
-export const makeEmployee = async (userId) => {
+export const makeEmployee = async (userId, companyId) => {
+  const company = companyId ? { id: companyId } : await getDefaultCompany();
   return prisma.employee.create({
     data: {
       name: "Test Employee",
@@ -25,6 +40,7 @@ export const makeEmployee = async (userId) => {
       title: "Developer",
       salary: 3000,
       userId,
+      companyId: company.id,
     },
   });
 };
@@ -46,6 +62,7 @@ export const removeUser = async (id) => {
     await prisma.attendance.deleteMany({ where: { employeeId: emp.id } });
     await prisma.payroll.deleteMany({ where: { employeeId: emp.id } });
     await prisma.tasks.deleteMany({ where: { employeeId: emp.id } });
+    await prisma.invite.deleteMany({ where: { companyId: emp.companyId } });
     await prisma.employee.delete({ where: { id: emp.id } });
   }
   await prisma.refreshToken.deleteMany({ where: { userId: id } });

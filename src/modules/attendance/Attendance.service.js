@@ -10,14 +10,15 @@ const getTodayRange = () => {
   return { start, end };
 };
 
-export const checkIn = async (userId) => {
-  const employee = await prisma.employee.findUnique({ where: { userId } });
+export const checkIn = async (userId, companyId) => {
+  const employee = await prisma.employee.findUnique({ where: { userId, companyId } });
   if (!employee) throw new ApiError("Employee record not found", 404);
   const employeeId = employee.id;
   const { start, end } = getTodayRange();
   const isAttended = await prisma.attendance.findFirst({
     where: {
       employeeId,
+      companyId,
       date: {
         gte: start,
         lte: end,
@@ -32,6 +33,7 @@ export const checkIn = async (userId) => {
   const attendance = await prisma.attendance.create({
     data: {
       employeeId,
+      companyId,
       date: start,
       checkIn: now,
       status,
@@ -42,14 +44,15 @@ export const checkIn = async (userId) => {
   return attendance;
 };
 
-export const checkOut = async (userId) => {
-  const employee = await prisma.employee.findUnique({ where: { userId } });
+export const checkOut = async (userId, companyId) => {
+  const employee = await prisma.employee.findUnique({ where: { userId, companyId } });
   if (!employee) throw new ApiError("Employee record not found", 404);
   const employeeId = employee.id;
   const { start, end } = getTodayRange();
   const attendance = await prisma.attendance.findFirst({
     where: {
       employeeId,
+      companyId,
       date: {
         gte: start,
         lte: end,
@@ -59,25 +62,26 @@ export const checkOut = async (userId) => {
   if (!attendance) throw new ApiError("You did not check in today", 400);
   if (attendance.checkOut) throw new ApiError("You already checked out", 400);
   const updated = await prisma.attendance.update({
-    where: { id: attendance.id },
+    where: { id: attendance.id, companyId },
     data: { checkOut: new Date(), updatedBy: userId },
   });
   logger.info(`Employee ${employeeId} checked OUT`);
   return updated;
 };
 
-export const getEmployeeAttendance = async (employeeId, query) => {
+export const getEmployeeAttendance = async (employeeId, query, companyId) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
+  const where = { employeeId, companyId };
   const [records, total] = await Promise.all([
     prisma.attendance.findMany({
-      where: { employeeId },
+      where,
       orderBy: { date: "desc" },
       skip,
       take: limit,
     }),
-    prisma.attendance.count({ where: { employeeId } }),
+    prisma.attendance.count({ where }),
   ]);
   return {
     records,
@@ -87,11 +91,12 @@ export const getEmployeeAttendance = async (employeeId, query) => {
   };
 };
 
-export const getTodayAttendance = async () => {
+export const getTodayAttendance = async (companyId) => {
   const { start, end } = getTodayRange();
   return prisma.attendance.findMany({
     where: {
       date: { gte: start, lte: end },
+      companyId,
     },
     include: { employee: true },
   });

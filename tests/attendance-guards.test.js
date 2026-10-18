@@ -6,13 +6,15 @@ describe("attendance guards", () => {
   let noRecordId;
   let freshId;
 
-  beforeAll(async () => {
+  let companyId;
+beforeAll(async () => {
     const a = await makeUser("EMPLOYEE");
     const b = await makeUser("EMPLOYEE");
     ids.push(a.user.id, b.user.id);
     noRecordId = a.user.id;
     freshId = b.user.id;
-    await makeEmployee(freshId);
+    companyId = a.companyId;
+    await makeEmployee(freshId, companyId);
   });
 
   afterAll(async () => {
@@ -21,10 +23,10 @@ describe("attendance guards", () => {
   });
 
   test("check-in without employee record fails with 404", async () => {
-    await expect(checkIn(noRecordId)).rejects.toMatchObject({ statusCode: 404 });
+    await expect(checkIn(noRecordId, companyId)).rejects.toMatchObject({ statusCode: 404 });
   });
 
   test("check-out without check-in fails with 400", async () => {
-    await expect(checkOut(freshId)).rejects.toMatchObject({ statusCode: 400 });
+    await expect(checkOut(freshId, companyId)).rejects.toMatchObject({ statusCode: 400 });
   });
 });

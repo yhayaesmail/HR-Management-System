@@ -13,7 +13,7 @@ const router = express.Router();
 router.post(
   "/",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateBody(createEmployeeSchema),
   employeeController.createEmployee,
 );
@@ -24,7 +24,7 @@ router.get("/:id", authMiddleware, employeeController.getEmployeeById);
 router.put(
   "/:id",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateBody(updateEmployeeSchema),
   employeeController.updateEmployee,
 );
@@ -32,13 +32,13 @@ router.put(
 router.delete(
   "/:id",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   employeeController.deleteEmployee,
 );
 router.delete(
   "/",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   employeeController.deleteAllEmployees,
 );
 

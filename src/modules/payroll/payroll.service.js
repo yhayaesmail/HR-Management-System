@@ -1,9 +1,9 @@
 import prisma from "../../config/prisma.js";
 import { badRequest, forbidden, notFound } from "../../utils/ApiError.js";
 
-export const createPayroll = async (data, userId) => {
+export const createPayroll = async (data, userId, companyId) => {
   const employee = await prisma.employee.findUnique({
-    where: { id: data.employeeId },
+    where: { id: data.employeeId, companyId },
   });
   if (!employee) {
     throw notFound("Employee not found");
@@ -13,6 +13,7 @@ export const createPayroll = async (data, userId) => {
       employeeId: data.employeeId,
       month: data.month,
       year: data.year,
+      companyId,
     },
   });
   if (exists) {
@@ -25,6 +26,7 @@ export const createPayroll = async (data, userId) => {
   const payroll = await prisma.payroll.create({
     data: {
       employeeId: data.employeeId,
+      companyId,
       baseSalary,
       bonus,
       deduction,
@@ -47,8 +49,9 @@ export const createPayroll = async (data, userId) => {
   return payroll;
 };
 
-export const getPayrolls = async () => {
+export const getPayrolls = async (companyId) => {
   return prisma.payroll.findMany({
+    where: { companyId },
     include: {
       employee: {
         select: {
@@ -64,9 +67,9 @@ export const getPayrolls = async () => {
   });
 };
 
-export const getPayrollById = async (id, currentUser) => {
+export const getPayrollById = async (id, currentUser, companyId) => {
   const payroll = await prisma.payroll.findUnique({
-    where: { id },
+    where: { id, companyId },
     include: {
       employee: {
         select: {
@@ -81,7 +84,8 @@ export const getPayrollById = async (id, currentUser) => {
     throw notFound("Payroll not found");
   }
   if (
-    currentUser.role !== "ADMIN" &&
+    currentUser.role !== "COMPANY_ADMIN" &&
+    currentUser.role !== "SUPER_ADMIN" &&
     payroll.employeeId !== currentUser.employee?.id
   ) {
     throw forbidden("You can only access your own payroll");
@@ -89,9 +93,9 @@ export const getPayrollById = async (id, currentUser) => {
   return payroll;
 };
 
-export const getEmployeePayrolls = async (employeeId) => {
+export const getEmployeePayrolls = async (employeeId, companyId) => {
   return prisma.payroll.findMany({
-    where: { employeeId },
+    where: { employeeId, companyId },
     include: {
       employee: {
         select: {
@@ -105,9 +109,9 @@ export const getEmployeePayrolls = async (employeeId) => {
   });
 };
 
-export const getMyPayrolls = async (employeeId) => {
+export const getMyPayrolls = async (employeeId, companyId) => {
   return prisma.payroll.findMany({
-    where: { employeeId },
+    where: { employeeId, companyId },
     include: {
       employee: {
         select: {
@@ -121,9 +125,9 @@ export const getMyPayrolls = async (employeeId) => {
   });
 };
 
-export const updatePayroll = async (id, data, userId) => {
+export const updatePayroll = async (id, data, userId, companyId) => {
   const payroll = await prisma.payroll.findUnique({
-    where: { id },
+    where: { id, companyId },
   });
   if (!payroll) {
     throw notFound("Payroll not found");
@@ -133,7 +137,7 @@ export const updatePayroll = async (id, data, userId) => {
   const deduction = data.deduction ?? payroll.deduction;
   const finalSalary = baseSalary + bonus - deduction;
   return prisma.payroll.update({
-    where: { id },
+    where: { id, companyId },
     data: {
       baseSalary,
       bonus,
@@ -153,15 +157,15 @@ export const updatePayroll = async (id, data, userId) => {
   });
 };
 
-export const deletePayroll = async (id) => {
+export const deletePayroll = async (id, companyId) => {
   const payroll = await prisma.payroll.findUnique({
-    where: { id },
+    where: { id, companyId },
   });
   if (!payroll) {
     throw notFound("Payroll not found");
   }
   await prisma.payroll.delete({
-    where: { id },
+    where: { id, companyId },
   });
   return { message: "Payroll deleted successfully" };
 };

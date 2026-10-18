@@ -31,7 +31,7 @@ router.get(
 router.get(
   "/",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateQuery(getApplicationsQuerySchema),
   hiringController.getApplications,
 );
@@ -39,7 +39,7 @@ router.get(
 router.get(
   "/:email",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateParams(applicationParamsSchema),
   hiringController.getApplicationById,
 );
@@ -47,7 +47,7 @@ router.get(
 router.patch(
   "/:email",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateParams(applicationParamsSchema),
   validateBody(proccessApplicationSchema),
   hiringController.proccessApplication,
@@ -56,7 +56,7 @@ router.patch(
 router.delete(
   "/:email",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateParams(applicationParamsSchema),
   hiringController.deleteApplication,
 );

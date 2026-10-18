@@ -3,7 +3,8 @@ import * as attendanceService from "./Attendance.service.js";
 export const checkInController = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const attendance = await attendanceService.checkIn(userId);
+    const companyId = req.companyId;
+    const attendance = await attendanceService.checkIn(userId, companyId);
     res.json({ success: true, attendance });
   } catch (err) {
     next(err);
@@ -13,7 +14,8 @@ export const checkInController = async (req, res, next) => {
 export const checkOutController = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const attendance = await attendanceService.checkOut(userId);
+    const companyId = req.companyId;
+    const attendance = await attendanceService.checkOut(userId, companyId);
     res.json({ success: true, attendance });
   } catch (err) {
     next(err);
@@ -24,9 +26,11 @@ export const getEmployeeAttendanceController = async (req, res, next) => {
   try {
     const userId = req.params.id;
     const query = req.query;
+    const companyId = req.companyId;
     const attendance = await attendanceService.getEmployeeAttendance(
       userId,
       query,
+      companyId,
     );
     res.json({ success: true, ...attendance });
   } catch (err) {
@@ -46,9 +50,11 @@ export const getMyAttendanceController = async (req, res, next) => {
       });
     }
 
+    const companyId = req.companyId;
     const attendance = await attendanceService.getEmployeeAttendance(
       req.user.employee.id,
       req.query,
+      companyId,
     );
     res.json({ success: true, ...attendance });
   } catch (err) {
@@ -58,7 +64,8 @@ export const getMyAttendanceController = async (req, res, next) => {
 
 export const getTodayAttendanceController = async (req, res, next) => {
   try {
-    const records = await attendanceService.getTodayAttendance();
+    const companyId = req.companyId;
+    const records = await attendanceService.getTodayAttendance(companyId);
     res.json({ success: true, records });
   } catch (err) {
     next(err);

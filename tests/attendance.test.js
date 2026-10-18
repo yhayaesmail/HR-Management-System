@@ -5,11 +5,13 @@ describe("attendance", () => {
   const ids = [];
   let userId;
 
-  beforeAll(async () => {
+  let companyId;
+beforeAll(async () => {
     const created = await makeUser("EMPLOYEE");
     ids.push(created.user.id);
     userId = created.user.id;
-    await makeEmployee(userId);
+    companyId = created.companyId;
+    await makeEmployee(userId, companyId);
   });
 
   afterAll(async () => {
@@ -18,19 +20,19 @@ describe("attendance", () => {
   });
 
   test("check-in creates record with valid status", async () => {
-    const rec = await checkIn(userId);
+    const rec = await checkIn(userId, companyId);
     expect(rec.employeeId).toBeDefined();
     expect(["LATE", "ON_TIME"]).toContain(rec.status);
     expect(rec.checkIn).toBeDefined();
   });
 
   test("second check-in same day is rejected", async () => {
-    await expect(checkIn(userId)).rejects.toMatchObject({ statusCode: 400 });
+    await expect(checkIn(userId, companyId)).rejects.toMatchObject({ statusCode: 400 });
   });
 
   test("check-out closes the day record", async () => {
-    const rec = await checkOut(userId);
+    const rec = await checkOut(userId, companyId);
     expect(rec.checkOut).toBeDefined();
-    await expect(checkOut(userId)).rejects.toMatchObject({ statusCode: 400 });
+    await expect(checkOut(userId, companyId)).rejects.toMatchObject({ statusCode: 400 });
   });
 });

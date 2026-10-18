@@ -10,10 +10,11 @@ export const initSocket = (io) => {
       const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
       const user = await prisma.user.findUnique({
         where: { id: decoded.id },
-        select: { id: true, email: true, role: true, isActive: true },
+        select: { id: true, email: true, role: true, isActive: true, companyId: true },
       });
       if (!user || !user.isActive) return next(new Error("Inactive user"));
       socket.user = user;
+      socket.companyId = user.companyId;
       next();
     } catch {
       next(new Error("Invalid token"));
@@ -48,6 +49,7 @@ export const initSocket = (io) => {
           conversationId,
           { body: String(body).slice(0, 2000), type: type === "MEETING" ? "MEETING" : "TEXT" },
           socket.user,
+          socket.companyId,
         );
         io.to(`conversation:${conversationId}`).emit("message:new", message);
         if (ack) ack({ success: true, data: message });

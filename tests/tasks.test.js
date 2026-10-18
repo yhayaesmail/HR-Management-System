@@ -22,12 +22,12 @@ describe("tasks", () => {
   let employee;
 
   beforeAll(async () => {
-    adminUser = await makeUser("ADMIN");
+    adminUser = await makeUser("COMPANY_ADMIN");
     ids.push(adminUser.user.id);
 
     employeeUser = await makeUser("EMPLOYEE");
     ids.push(employeeUser.user.id);
-    employee = await makeEmployee(employeeUser.user.id);
+    employee = await makeEmployee(employeeUser.user.id, adminUser.companyId);
   });
 
   afterAll(async () => {
@@ -47,6 +47,7 @@ describe("tasks", () => {
         runningTaskDeadline: deadline,
       },
       adminUser.user.id,
+      adminUser.companyId,
     );
     expect(task.id).toBeDefined();
     expect(task.employeeId).toBe(employee.id);
@@ -64,24 +65,25 @@ describe("tasks", () => {
           runningTaskDeadline: deadline,
         },
         adminUser.user.id,
+        adminUser.companyId,
       ),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
   test("getAllTasks returns tasks", async () => {
-    const tasks = await getAllTasks();
+    const tasks = await getAllTasks(adminUser.companyId);
     expect(Array.isArray(tasks)).toBe(true);
     expect(tasks.length).toBeGreaterThanOrEqual(1);
   });
 
   test("getMyTasks returns tasks assigned to the employee", async () => {
-    const tasks = await getMyTasks(employee.id);
+    const tasks = await getMyTasks(employee.id, adminUser.companyId);
     expect(Array.isArray(tasks)).toBe(true);
     expect(tasks.every((t) => t.employeeId === employee.id)).toBe(true);
   });
 
   test("getEmployeeTasks returns tasks for an employee", async () => {
-    const tasks = await getEmployeeTasks(employee.id);
+    const tasks = await getEmployeeTasks(employee.id, adminUser.companyId);
     expect(Array.isArray(tasks)).toBe(true);
     expect(tasks.length).toBeGreaterThanOrEqual(1);
   });
@@ -90,8 +92,9 @@ describe("tasks", () => {
     const all = await getAllTasks();
     const task = await getTaskById(all[0].id, {
       id: adminUser.user.id,
-      role: "ADMIN",
-    });
+      role: "COMPANY_ADMIN",
+      companyId: adminUser.companyId,
+    }, adminUser.companyId);
     expect(task.id).toBe(all[0].id);
   });
 
@@ -99,8 +102,9 @@ describe("tasks", () => {
     await expect(
       getTaskById("00000000-0000-0000-0000-000000000000", {
         id: adminUser.user.id,
-        role: "ADMIN",
-      }),
+        role: "COMPANY_ADMIN",
+        companyId: adminUser.companyId,
+      }, adminUser.companyId),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
@@ -120,7 +124,8 @@ describe("tasks", () => {
     const updated = await changeTaskStatus(
       all[0].id,
       "DONE",
-      { id: adminUser.user.id, role: "ADMIN" },
+      { id: adminUser.user.id, role: "COMPANY_ADMIN", companyId: adminUser.companyId },
+      adminUser.companyId,
     );
     expect(updated.status).toBe("DONE");
   });
@@ -134,11 +139,13 @@ describe("tasks", () => {
         runningTaskDeadline: deadline,
       },
       adminUser.user.id,
+      adminUser.companyId,
     );
     const updated = await changeTaskStatus(
       task.id,
       "PENDING",
-      { id: adminUser.user.id, role: "ADMIN" },
+      { id: adminUser.user.id, role: "COMPANY_ADMIN", companyId: adminUser.companyId },
+      adminUser.companyId,
     );
     expect(updated.status).toBe("TODO");
   });
@@ -160,6 +167,7 @@ describe("tasks", () => {
       all[all.length - 1].id,
       { title: "Updated title", priority: "MEDIUM" },
       adminUser.user.id,
+      adminUser.companyId,
     );
     expect(updated.title).toBe("Updated title");
     expect(updated.priority).toBe("MEDIUM");
@@ -171,6 +179,7 @@ describe("tasks", () => {
         "00000000-0000-0000-0000-000000000000",
         { title: "x" },
         adminUser.user.id,
+        adminUser.companyId,
       ),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
@@ -184,14 +193,15 @@ describe("tasks", () => {
         runningTaskDeadline: deadline,
       },
       adminUser.user.id,
+      adminUser.companyId,
     );
-    const result = await deleteTask(task.id);
+    const result = await deleteTask(task.id, adminUser.companyId);
     expect(result.message).toBe("Task deleted successfully");
   });
 
   test("deleteTask throws 404 for missing task", async () => {
     await expect(
-      deleteTask("00000000-0000-0000-0000-000000000000"),
+      deleteTask("00000000-0000-0000-0000-000000000000", adminUser.companyId),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });

@@ -10,9 +10,9 @@ const normalizeTaskStatus = (status) => {
   return aliases[status] || status;
 };
 
-export const createTask = async (data, userId) => {
+export const createTask = async (data, userId, companyId) => {
   const employee = await prisma.employee.findUnique({
-    where: { id: data.employeeId },
+    where: { id: data.employeeId, companyId },
   });
   if (!employee) {
     throw new ApiError("Employee not found", 404);
@@ -24,6 +24,7 @@ export const createTask = async (data, userId) => {
       priority: data.priority,
       runningTaskDeadline: data.runningTaskDeadline,
       employeeId: data.employeeId,
+      companyId,
       createdBy: userId,
     },
     include: {
@@ -38,8 +39,9 @@ export const createTask = async (data, userId) => {
   });
 };
 
-export const getAllTasks = async () => {
+export const getAllTasks = async (companyId) => {
   return await prisma.tasks.findMany({
+    where: { companyId },
     include: {
       employee: {
         select: {
@@ -56,9 +58,9 @@ export const getAllTasks = async () => {
   });
 };
 
-export const getTaskById = async (taskId, currentUser) => {
+export const getTaskById = async (taskId, currentUser, companyId) => {
   const task = await prisma.tasks.findUnique({
-    where: { id: taskId },
+    where: { id: taskId, companyId },
     include: {
       employee: {
         select: {
@@ -73,7 +75,8 @@ export const getTaskById = async (taskId, currentUser) => {
     throw new ApiError("Task not found", 404);
   }
   if (
-    currentUser.role !== "ADMIN" &&
+    currentUser.role !== "COMPANY_ADMIN" &&
+    currentUser.role !== "SUPER_ADMIN" &&
     task.employeeId !== currentUser.employee?.id
   ) {
     throw forbidden("You can only access tasks assigned to you");
@@ -81,15 +84,15 @@ export const getTaskById = async (taskId, currentUser) => {
   return task;
 };
 
-export const updateTask = async (taskId, data, userId) => {
+export const updateTask = async (taskId, data, userId, companyId) => {
   const task = await prisma.tasks.findUnique({
-    where: { id: taskId },
+    where: { id: taskId, companyId },
   });
   if (!task) {
     throw new ApiError("Task not found", 404);
   }
   return await prisma.tasks.update({
-    where: { id: taskId },
+    where: { id: taskId, companyId },
     data: {
       ...data,
       updatedBy: userId,
@@ -106,21 +109,22 @@ export const updateTask = async (taskId, data, userId) => {
   });
 };
 
-export const changeTaskStatus = async (taskId, status, currentUser) => {
+export const changeTaskStatus = async (taskId, status, currentUser, companyId) => {
   const task = await prisma.tasks.findUnique({
-    where: { id: taskId },
+    where: { id: taskId, companyId },
   });
   if (!task) {
     throw new ApiError("Task not found", 404);
   }
   if (
-    currentUser.role !== "ADMIN" &&
+    currentUser.role !== "COMPANY_ADMIN" &&
+    currentUser.role !== "SUPER_ADMIN" &&
     task.employeeId !== currentUser.employee?.id
   ) {
     throw forbidden("You can only update tasks assigned to you");
   }
   return await prisma.tasks.update({
-    where: { id: taskId },
+    where: { id: taskId, companyId },
     data: {
       status: normalizeTaskStatus(status),
       updatedBy: currentUser.id,
@@ -137,23 +141,23 @@ export const changeTaskStatus = async (taskId, status, currentUser) => {
   });
 };
 
-export const deleteTask = async (taskId) => {
+export const deleteTask = async (taskId, companyId) => {
   const task = await prisma.tasks.findUnique({
-    where: { id: taskId },
+    where: { id: taskId, companyId },
   });
   if (!task) {
     throw new ApiError("Task not found", 404);
   }
   await prisma.tasks.delete({
-    where: { id: taskId },
+    where: { id: taskId, companyId },
   });
 
   return { message: "Task deleted successfully" };
 };
 
-export const getMyTasks = async (employeeId) => {
+export const getMyTasks = async (employeeId, companyId) => {
   return await prisma.tasks.findMany({
-    where: { employeeId },
+    where: { employeeId, companyId },
     include: {
       employee: {
         select: {
@@ -170,9 +174,9 @@ export const getMyTasks = async (employeeId) => {
   });
 };
 
-export const getEmployeeTasks = async (employeeId) => {
+export const getEmployeeTasks = async (employeeId, companyId) => {
   return await prisma.tasks.findMany({
-    where: { employeeId },
+    where: { employeeId, companyId },
     include: {
       employee: {
         select: {

@@ -5,12 +5,14 @@ describe("auth", () => {
   const ids = [];
   let email;
   let password;
+  let companyId;
 
   beforeAll(async () => {
-    const created = await makeUser("ADMIN");
+    const created = await makeUser("COMPANY_ADMIN");
     ids.push(created.user.id);
     email = created.email;
     password = created.password;
+    companyId = created.companyId;
   });
 
   afterAll(async () => {
@@ -22,7 +24,8 @@ describe("auth", () => {
     const res = await login({ email, password });
     expect(res.success).toBe(true);
     expect(res.data.accessToken).toBeDefined();
-    expect(res.data.user.role).toBe("ADMIN");
+    expect(res.data.user.role).toBe("COMPANY_ADMIN");
+    expect(res.data.user.companyId).toBe(companyId);
   });
 
   test("wrong password fails with 401", async () => {

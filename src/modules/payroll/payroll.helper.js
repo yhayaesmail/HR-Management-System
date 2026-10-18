@@ -16,15 +16,15 @@ const getPayrollPeriod = (month, year) => {
   };
 };
 
-export const generateMonthlyPayroll = async (month, year, createdBy) => {
+export const generateMonthlyPayroll = async (month, year, createdBy, companyId) => {
   const { start, end, daysInMonth } = getPayrollPeriod(month, year);
   const employees = await prisma.employee.findMany({
-    where: { isActive: true },
+    where: { isActive: true, companyId },
   });
   const payrolls = [];
   for (const emp of employees) {
     const existingPayroll = await prisma.payroll.findFirst({
-      where: { employeeId: emp.id, month, year },
+      where: { employeeId: emp.id, month, year, companyId },
     });
     if (existingPayroll) {
       payrolls.push(existingPayroll);
@@ -34,6 +34,7 @@ export const generateMonthlyPayroll = async (month, year, createdBy) => {
     const attendance = await prisma.attendance.findMany({
       where: {
         employeeId: emp.id,
+        companyId,
         date: { gte: start, lt: end },
       },
     });
@@ -52,6 +53,7 @@ export const generateMonthlyPayroll = async (month, year, createdBy) => {
     const payroll = await prisma.payroll.create({
       data: {
         employeeId: emp.id,
+        companyId,
         baseSalary: emp.salary,
         bonus: 0,
         deduction,
@@ -66,11 +68,10 @@ export const generateMonthlyPayroll = async (month, year, createdBy) => {
   return payrolls;
 };
 
-
-export const getMonthlyReport = async (month, year) => {
+export const getMonthlyReport = async (month, year, companyId) => {
   getPayrollPeriod(month, year);
   const payrolls = await prisma.payroll.findMany({
-    where: { month, year },
+    where: { month, year, companyId },
     include: {
       employee: {
         select: {

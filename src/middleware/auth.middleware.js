@@ -18,6 +18,7 @@ export const authMiddleware = async (req, res, next) => {
       where: { id: decoded.id },
       include: {
         employee: true,
+        company: true,
       },
     });
 
@@ -29,8 +30,12 @@ export const authMiddleware = async (req, res, next) => {
       id: user.id,
       email: user.email,
       role: user.role,
+      companyId: user.companyId,
       employee: user.employee,
     };
+
+    req.companyId = user.companyId;
+    req.company = user.company;
 
     next();
   } catch (err) {

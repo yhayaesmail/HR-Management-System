@@ -23,19 +23,19 @@ export const isParticipant = async (conversationId, userId) => {
   return !!p;
 };
 
-export const createConversation = async (data, currentUser) => {
+export const createConversation = async (data, currentUser, companyId) => {
   const uniqueIds = [...new Set(data.participantIds)];
   if (uniqueIds.includes(currentUser.id)) {
     throw new ApiError("Do not include yourself in participantIds", 400);
   }
   const users = await prisma.user.findMany({
-    where: { id: { in: uniqueIds }, isActive: true },
+    where: { id: { in: uniqueIds }, isActive: true, companyId },
     select: { id: true },
   });
   if (users.length !== uniqueIds.length) {
     throw new ApiError("One or more users not found or inactive", 404);
   }
-  if (data.isGroup && currentUser.role !== "ADMIN") {
+  if (data.isGroup && currentUser.role !== "COMPANY_ADMIN" && currentUser.role !== "SUPER_ADMIN") {
     throw forbidden("Only HR/Admin can create group chats");
   }
   if (!data.isGroup && uniqueIds.length !== 1) {
@@ -47,6 +47,7 @@ export const createConversation = async (data, currentUser) => {
     const existing = await prisma.conversation.findFirst({
       where: {
         isGroup: false,
+        companyId,
         participants: { some: { userId: currentUser.id } },
         AND: { participants: { some: { userId: otherId } } },
       },
@@ -60,53 +61,55 @@ export const createConversation = async (data, currentUser) => {
     }
   }
 
-  return await prisma.conversation.create({
+return await prisma.conversation.create({
     data: {
       title: data.title || null,
       isGroup: !!data.isGroup,
+      companyId,
       createdBy: currentUser.id,
       participants: {
-        create: [{ userId: currentUser.id }, ...uniqueIds.map((userId) => ({ userId }))],
+        create: [{ userId: currentUser.id, companyId }, ...uniqueIds.map((userId) => ({ userId, companyId }))],
       },
     },
     include: conversationInclude,
   });
 };
 
-export const getMyConversations = async (userId) => {
+export const getMyConversations = async (userId, companyId) => {
   return await prisma.conversation.findMany({
-    where: { participants: { some: { userId } } },
+    where: { participants: { some: { userId } }, companyId },
     include: conversationInclude,
     orderBy: { updatedAt: "desc" },
   });
 };
 
-export const getMessages = async (conversationId, currentUser) => {
-  const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
+export const getMessages = async (conversationId, currentUser, companyId) => {
+  const conversation = await prisma.conversation.findUnique({ where: { id: conversationId, companyId } });
   if (!conversation) throw notFound("Conversation not found");
   if (!(await isParticipant(conversationId, currentUser.id))) {
     throw forbidden("You are not in this conversation");
   }
   return await prisma.message.findMany({
-    where: { conversationId },
+    where: { conversationId, companyId },
     include: { sender: { select: { id: true, email: true } } },
     orderBy: { createdAt: "asc" },
     take: 200,
   });
 };
 
-export const sendMessage = async (conversationId, data, currentUser) => {
-  const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
+export const sendMessage = async (conversationId, data, currentUser, companyId) => {
+  const conversation = await prisma.conversation.findUnique({ where: { id: conversationId, companyId } });
   if (!conversation) throw notFound("Conversation not found");
   if (!(await isParticipant(conversationId, currentUser.id))) {
     throw forbidden("You are not in this conversation");
   }
-  if (data.type === "MEETING" && currentUser.role !== "ADMIN") {
+  if (data.type === "MEETING" && currentUser.role !== "COMPANY_ADMIN" && currentUser.role !== "SUPER_ADMIN") {
     throw forbidden("Only HR/Admin can send meeting notices");
   }
   const message = await prisma.message.create({
     data: {
       conversationId,
+      companyId,
       senderId: currentUser.id,
       body: data.body,
       type: data.type || "TEXT",
@@ -114,15 +117,15 @@ export const sendMessage = async (conversationId, data, currentUser) => {
     include: { sender: { select: { id: true, email: true } } },
   });
   await prisma.conversation.update({
-    where: { id: conversationId },
+    where: { id: conversationId, companyId },
     data: { updatedAt: new Date() },
   });
   return message;
 };
 
-export const getChatUsers = async (currentUser) => {
+export const getChatUsers = async (currentUser, companyId) => {
   const users = await prisma.user.findMany({
-    where: { isActive: true, NOT: { id: currentUser.id } },
+    where: { isActive: true, NOT: { id: currentUser.id }, companyId },
     select: {
       id: true,
       email: true,

@@ -5,7 +5,7 @@ import logger from "../../utils/logger.js";
 
 const userPublicSelect = { id: true, email: true, role: true, isActive: true };
 
-export const createEmployee = async (data, actorId) => {
+export const createEmployee = async (data, actorId, companyId) => {
   const existingUser = await prisma.user.findUnique({
     where: { email: data.email },
   });
@@ -20,7 +20,7 @@ export const createEmployee = async (data, actorId) => {
 
   const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
-      data: { email: data.email, password: hashedPass, role: "EMPLOYEE" },
+      data: { email: data.email, password: hashedPass, role: "EMPLOYEE", companyId },
     });
 
     const employee = await tx.employee.create({
@@ -33,6 +33,7 @@ export const createEmployee = async (data, actorId) => {
         userId: user.id,
         phone: data.phone,
         createdBy: actorId,
+        companyId,
       },
       include: { user: { select: userPublicSelect } },
     });
@@ -46,8 +47,8 @@ export const createEmployee = async (data, actorId) => {
   return result;
 };
 
-export const getEmployees = async (query, currentUser) => {
-  if (currentUser.role !== "ADMIN") {
+export const getEmployees = async (query, currentUser, companyId) => {
+  if (currentUser.role !== "COMPANY_ADMIN" && currentUser.role !== "SUPER_ADMIN") {
     if (!currentUser.employee) {
       return { employees: [], total: 0, totalPages: 0, page: 1 };
     }
@@ -55,12 +56,14 @@ export const getEmployees = async (query, currentUser) => {
     const employee = await getEmployeeById(
       currentUser.employee.id,
       currentUser,
+      companyId,
     );
     return { employees: [employee], total: 1, totalPages: 1, page: 1 };
   }
 
   const { page = 1, limit = 10, search = "", department, title } = query;
   const where = {
+    companyId,
     isActive: true,
     AND: [
       department ? { department } : {},
@@ -98,13 +101,17 @@ export const getEmployees = async (query, currentUser) => {
   };
 };
 
-export const getEmployeeById = async (id, currentUser) => {
-  if (currentUser.role !== "ADMIN" && currentUser.employee?.id !== id) {
+export const getEmployeeById = async (id, currentUser, companyId) => {
+  if (
+    currentUser.role !== "COMPANY_ADMIN" &&
+    currentUser.role !== "SUPER_ADMIN" &&
+    currentUser.employee?.id !== id
+  ) {
     throw forbidden("You can only access your own employee profile");
   }
 
   const employee = await prisma.employee.findUnique({
-    where: { id },
+    where: { id, companyId },
     include: {
       user: { select: userPublicSelect },
       payrolls: { orderBy: { createdAt: "desc" }, take: 5 },
@@ -120,9 +127,9 @@ export const getEmployeeById = async (id, currentUser) => {
   return employee;
 };
 
-export const updateEmployee = async (id, data, actorId) => {
+export const updateEmployee = async (id, data, actorId, companyId) => {
   const employee = await prisma.employee.findUnique({
-    where: { id },
+    where: { id, companyId },
     include: { user: true },
   });
   if (!employee) {
@@ -150,7 +157,7 @@ export const updateEmployee = async (id, data, actorId) => {
         data: { email },
       });
     const updatedEmployee = await tx.employee.update({
-      where: { id },
+      where: { id, companyId },
       data: { ...employeeData, updatedBy: actorId },
       include: { user: { select: userPublicSelect } },
     });
@@ -162,9 +169,9 @@ export const updateEmployee = async (id, data, actorId) => {
   return result;
 };
 
-export const deleteEmployee = async (id) => {
+export const deleteEmployee = async (id, companyId) => {
   const employee = await prisma.employee.findUnique({
-    where: { id },
+    where: { id, companyId },
     include: { user: true },
   });
   if (!employee) {
@@ -182,7 +189,7 @@ export const deleteEmployee = async (id) => {
       data: { isActive: false },
     });
     const deletedEmployee = await tx.employee.update({
-      where: { id },
+      where: { id, companyId },
       data: { isActive: false },
     });
     logger.info(`Employee soft-deleted ID: ${id}`);
@@ -193,14 +200,14 @@ export const deleteEmployee = async (id) => {
   return result;
 };
 
-export const deleteAllEmployees = async () => {
+export const deleteAllEmployees = async (companyId) => {
   const result = await prisma.$transaction(async (tx) => {
     await tx.user.updateMany({
-      where: { employee: { isActive: true } },
+      where: { employee: { isActive: true }, companyId },
       data: { isActive: false },
     });
     const updatedEmployees = await tx.employee.updateMany({
-      where: { isActive: true },
+      where: { isActive: true, companyId },
       data: { isActive: false },
     });
     logger.info(`All employees soft-deleted`);

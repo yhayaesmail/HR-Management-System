@@ -5,6 +5,7 @@ export const generateAccessToken = (user) => {
     {
       id: user.id,
       role: user.role,
+      companyId: user.companyId,
     },
     process.env.JWT_ACCESS_SECRET,
     {
@@ -18,6 +19,7 @@ export const generateRefreshToken = (user) => {
     {
       id: user.id,
       role: user.role,
+      companyId: user.companyId,
     },
     process.env.JWT_REFRESH_SECRET,
     {

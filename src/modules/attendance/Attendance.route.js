@@ -44,7 +44,7 @@ router.get(
 router.get(
   "/employee/:id",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   validateQuery(getEmployeeAttendanceSchema),
   getEmployeeAttendanceController,
 );
@@ -52,7 +52,7 @@ router.get(
 router.get(
   "/today",
   authMiddleware,
-  authorizeRole("ADMIN"),
+  authorizeRole("COMPANY_ADMIN"),
   getTodayAttendanceController,
 );
 

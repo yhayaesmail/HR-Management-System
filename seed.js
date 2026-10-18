@@ -15,14 +15,14 @@ async function main() {
     where: { email: "admin@hrm.dev" },
     update: {
       password,
-      role: "ADMIN",
+      role: "COMPANY_ADMIN",
       isActive: true,
       companyId: company.id,
     },
     create: {
       email: "admin@hrm.dev",
       password,
-      role: "ADMIN",
+      role: "COMPANY_ADMIN",
       companyId: company.id,
     },
   });

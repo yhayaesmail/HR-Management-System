@@ -25,6 +25,7 @@ model Company {
   conversations             Conversation[]
   conversationParticipants  ConversationParticipant[]
   messages                  Message[]
+  invites                   Invite[]
   refreshTokens             RefreshToken[]
 }
 
@@ -162,7 +163,8 @@ model Hiring {
 }
 
 enum Role {
-  ADMIN
+  SUPER_ADMIN
+  COMPANY_ADMIN
   EMPLOYEE
 }
 
@@ -234,6 +236,21 @@ model Message {
   company        Company      @relation(fields: [companyId], references: [id])
 
   @@index([companyId])
+}
+
+model Invite {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  companyId   String
+  token       String   @unique
+  role        Role     @default(EMPLOYEE)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime @default(now())
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([token])
 }
 
 enum MessageType {

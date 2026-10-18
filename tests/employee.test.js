@@ -12,7 +12,7 @@ describe("employee", () => {
   let admin;
 
   beforeAll(async () => {
-    const adminUser = await makeUser("ADMIN");
+    const adminUser = await makeUser("COMPANY_ADMIN");
     admin = adminUser.user;
     ids.push(admin.id);
   });
@@ -34,7 +34,7 @@ describe("employee", () => {
   };
 
   test("ADMIN creates an employee", async () => {
-    const emp = await createEmployee(empData, admin.id);
+    const emp = await createEmployee(empData, admin.id, admin.companyId);
     expect(emp.id).toBeDefined();
     expect(emp.name).toBe(empData.name);
     expect(emp.department).toBe(empData.department);
@@ -43,13 +43,13 @@ describe("employee", () => {
   });
 
   test("creating employee with existing email throws 400", async () => {
-    await expect(createEmployee(empData, admin.id)).rejects.toMatchObject({
+    await expect(createEmployee(empData, admin.id, admin.companyId)).rejects.toMatchObject({
       statusCode: 400,
     });
   });
 
   test("ADMIN lists employees", async () => {
-    const result = await getEmployees({ page: 1, limit: 10 }, admin);
+    const result = await getEmployees({ page: 1, limit: 10 }, admin, admin.companyId);
     expect(result.employees).toBeDefined();
     expect(Array.isArray(result.employees)).toBe(true);
     expect(result.total).toBeGreaterThanOrEqual(1);
@@ -58,13 +58,13 @@ describe("employee", () => {
 
   test("ADMIN gets employee by id", async () => {
     const all = await getEmployees({ page: 1, limit: 10 }, admin);
-    const emp = await getEmployeeById(all.employees[0].id, admin);
+    const emp = await getEmployeeById(all.employees[0].id, admin, admin.companyId);
     expect(emp.id).toBe(all.employees[0].id);
   });
 
   test("getEmployeeById throws 404 for missing id", async () => {
     await expect(
-      getEmployeeById("00000000-0000-0000-0000-000000000000", admin),
+      getEmployeeById("00000000-0000-0000-0000-000000000000", admin, admin.companyId),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 
@@ -72,7 +72,7 @@ describe("employee", () => {
     const employee = await makeUser("EMPLOYEE");
     ids.push(employee.user.id);
     await expect(
-      getEmployeeById("00000000-0000-0000-0000-000000000001", employee.user),
+      getEmployeeById("00000000-0000-0000-0000-000000000001", employee.user, admin.companyId),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
@@ -83,6 +83,7 @@ describe("employee", () => {
       target.id,
       { title: "Senior Software Engineer", salary: 7000 },
       admin.id,
+      admin.companyId,
     );
     expect(updated.title).toBe("Senior Software Engineer");
     expect(updated.salary).toBe(7000);
@@ -94,6 +95,7 @@ describe("employee", () => {
         "00000000-0000-0000-0000-000000000000",
         { title: "x" },
         admin.id,
+        admin.companyId,
       ),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
@@ -101,7 +103,7 @@ describe("employee", () => {
   test("ADMIN soft-deletes an employee", async () => {
     const all = await getEmployees({ page: 1, limit: 10 }, admin);
     const target = all.employees.find((e) => e.user.email === empData.email);
-    const deleted = await deleteEmployee(target.id);
+    const deleted = await deleteEmployee(target.id, admin.companyId);
     expect(deleted.isActive).toBe(false);
     const check = await getEmployeeById(target.id, admin);
     expect(check.user.isActive).toBe(false);
@@ -109,7 +111,7 @@ describe("employee", () => {
 
   test("deleteEmployee throws 404 for missing id", async () => {
     await expect(
-      deleteEmployee("00000000-0000-0000-0000-000000000000"),
+      deleteEmployee("00000000-0000-0000-0000-000000000000", admin.companyId),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
 });
