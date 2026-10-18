@@ -150,13 +150,21 @@ const HIRING = [
 async function main() {
   const hashedPassword = await hashPassword(PASSWORD);
 
+  let company = await prisma.company.findUnique({ where: { slug: "default" } });
+  if (!company) {
+    company = await prisma.company.create({
+      data: { name: "Default Company", slug: "default" },
+    });
+  }
+
   await prisma.user.upsert({
     where: { email: "admin@hrm.dev" },
-    update: { role: "ADMIN", isActive: true },
+    update: { role: "ADMIN", isActive: true, companyId: company.id },
     create: {
       email: "admin@hrm.dev",
       password: await hashPassword("admin123"),
       role: "ADMIN",
+      companyId: company.id,
     },
   });
 
@@ -164,11 +172,12 @@ async function main() {
   for (const emp of EMPLOYEES) {
     await prisma.user.upsert({
       where: { email: emp.email },
-      update: { isActive: true },
+      update: { isActive: true, companyId: company.id },
       create: {
         email: emp.email,
         password: hashedPassword,
         role: "EMPLOYEE",
+        companyId: company.id,
       },
     });
     const user = await prisma.user.findUnique({ where: { email: emp.email } });
@@ -182,6 +191,7 @@ async function main() {
         phone: emp.phone,
         address: emp.address,
         isActive: true,
+        companyId: company.id,
       },
       create: {
         name: emp.name,
@@ -191,6 +201,7 @@ async function main() {
         phone: emp.phone,
         address: emp.address,
         userId: user.id,
+        companyId: company.id,
       },
     });
     created.push(record);
@@ -224,6 +235,7 @@ async function main() {
     await prisma.attendance.create({
       data: {
         employeeId: emp.id,
+        companyId: company.id,
         date: today,
         status,
         checkIn,
@@ -239,6 +251,7 @@ async function main() {
     await prisma.payroll.create({
       data: {
         employeeId: emp.id,
+        companyId: company.id,
         baseSalary: emp.salary,
         bonus,
         deduction,
@@ -259,6 +272,7 @@ async function main() {
         priority: t.priority,
         status: t.status,
         employeeId: emp.id,
+        companyId: company.id,
         runningTaskDeadline: new Date(
           today.getTime() + ((i % 14) + 1) * 24 * 60 * 60 * 1000,
         ),
@@ -272,6 +286,7 @@ async function main() {
         firstName: h.firstName,
         lastName: h.lastName,
         email: h.email,
+        companyId: company.id,
         education: h.education,
         graduateYear: h.graduateYear,
         experience: h.experience,

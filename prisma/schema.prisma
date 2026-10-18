@@ -7,14 +7,37 @@ datasource db {
   provider = "postgresql"
 }
 
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  plan        String   @default("FREE")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users                     User[]
+  employees                 Employee[]
+  attendances               Attendance[]
+  tasks                     Tasks[]
+  payrolls                  Payroll[]
+  hirings                   Hiring[]
+  conversations             Conversation[]
+  conversationParticipants  ConversationParticipant[]
+  messages                  Message[]
+  refreshTokens             RefreshToken[]
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
   password      String
   role          Role           @default(EMPLOYEE)
   isActive      Boolean        @default(true)
+  companyId     String
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  company       Company        @relation(fields: [companyId], references: [id])
   employee      Employee?
   refreshTokens RefreshToken[]
   conversations ConversationParticipant[]
@@ -32,18 +55,23 @@ model Employee {
   address     String?
   isActive    Boolean      @default(true)
   title       String
+  companyId   String
   userId      String       @unique
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  attendances Attendance[]
+  company     Company      @relation(fields: [companyId], references: [id])
   user        User         @relation(fields: [userId], references: [id])
+  attendances Attendance[]
   payrolls    Payroll[]
   tasks       Tasks[]
+
+  @@unique([companyId, userId])
 }
 
 model Attendance {
   id         String           @id @default(uuid())
   employeeId String
+  companyId  String
   date       DateTime
   status     AttendanceStatus @default(PRESENT)
   checkIn    DateTime?
@@ -53,8 +81,10 @@ model Attendance {
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
   employee   Employee         @relation(fields: [employeeId], references: [id])
+  company    Company          @relation(fields: [companyId], references: [id])
 
   @@unique([employeeId, date])
+  @@index([companyId])
 }
 
 model Payroll {
@@ -67,12 +97,15 @@ model Payroll {
   bonus       Float    @default(0)
   month       Int
   year        Int
+  companyId   String
+  employeeId  String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  employeeId  String
   employee    Employee @relation(fields: [employeeId], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id])
 
   @@unique([employeeId, month, year])
+  @@index([companyId])
 }
 
 model Tasks {
@@ -85,25 +118,32 @@ model Tasks {
   updatedBy           String?
   runningTaskDeadline DateTime
   employeeId          String
+  companyId           String
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
   employee            Employee     @relation(fields: [employeeId], references: [id])
+  company             Company      @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
 }
 
 model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
   userId    String
+  companyId String
   expiresAt DateTime
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+  company   Company  @relation(fields: [companyId], references: [id])
 }
 
 model Hiring {
   id           String         @id @default(uuid())
   firstName    String
-  lastName     String
-  email        String         @unique
+  lastName    String
+  email        String
+  companyId    String
   education    String
   coverLetter  String?
   graduateYear String
@@ -115,6 +155,10 @@ model Hiring {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   status       HiringProgress @default(WAITING)
+  company      Company        @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, email])
+  @@index([companyId])
 }
 
 enum Role {
@@ -153,32 +197,43 @@ model Conversation {
   title        String?
   isGroup      Boolean                   @default(false)
   createdBy    String?
+  companyId    String
   createdAt    DateTime                  @default(now())
   updatedAt    DateTime                  @updatedAt
   participants ConversationParticipant[]
   messages     Message[]
+  company      Company                   @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
 }
 
 model ConversationParticipant {
   id             String       @id @default(uuid())
   conversationId String
   userId         String
+  companyId      String
   joinedAt       DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company        Company      @relation(fields: [companyId], references: [id])
 
   @@unique([conversationId, userId])
+  @@index([companyId])
 }
 
 model Message {
   id             String       @id @default(uuid())
   conversationId String
   senderId       String
+  companyId      String
   body           String
   type           MessageType  @default(TEXT)
   createdAt      DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  company        Company      @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
 }
 
 enum MessageType {
