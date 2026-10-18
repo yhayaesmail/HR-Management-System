@@ -96,6 +96,15 @@ export const createInviteController = async (req, res, next) => {
   }
 };
 
+export const getInviteStatusController = async (req, res, next) => {
+  try {
+    const result = await authService.getInviteStatus(req.params.token);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const logoutController = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;

@@ -257,6 +257,20 @@ export const registerEmployee = async ({ email, password, inviteToken }) => {
   };
 };
 
+export const getInviteStatus = async (token) => {
+  const invite = await prisma.invite.findUnique({ where: { token } });
+
+  if (!invite) {
+    return { success: true, data: { status: "INVALID" } };
+  }
+
+  let status = "VALID";
+  if (invite.usedAt) status = "USED";
+  else if (invite.expiresAt < new Date()) status = "EXPIRED";
+
+  return { success: true, data: { status } };
+};
+
 export const createInvite = async ({
   email,
   companyId,

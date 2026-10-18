@@ -1,15 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { api } from "../api/client.js";
+
+const DEAD_INVITE_MESSAGES = {
+  USED: "Invite token already used",
+  EXPIRED: "Invite token expired",
+  INVALID: "Invalid invite link",
+  ERROR: "Invalid invite link",
+};
 
 export default function AcceptInvite() {
   const { token } = useParams();
   const { adopt } = useAuth();
   const navigate = useNavigate();
+  const [status, setStatus] = useState("CHECKING");
   const [form, setForm] = useState({ email: "", password: "", confirm: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    api(`/auth/invite/${token}`)
+      .then((res) => {
+        if (active) setStatus(res.data?.status || "INVALID");
+      })
+      .catch(() => {
+        if (active) setStatus("ERROR");
+      });
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -29,11 +51,40 @@ export default function AcceptInvite() {
       adopt(res.data);
       navigate("/");
     } catch (err) {
-      setError(err.message);
+      if (err.message === "Invite token already used") setStatus("USED");
+      else if (err.message === "Invite token expired") setStatus("EXPIRED");
+      else setError(err.message);
     } finally {
       setBusy(false);
     }
   };
+
+  if (status === "CHECKING") {
+    return (
+      <div className="login-screen">
+        <div className="login-card">
+          <h1>You're invited</h1>
+          <div className="login-sub">Checking your invitation...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status !== "VALID") {
+    return (
+      <div className="login-screen">
+        <div className="login-card">
+          <h1>You're invited</h1>
+          <div className="login-error" style={{ marginTop: 16 }}>
+            {DEAD_INVITE_MESSAGES[status] || "Invalid invite link"}
+          </div>
+          <div className="auth-footer">
+            Already have an account? <Link to="/login">Sign in</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="login-screen">
