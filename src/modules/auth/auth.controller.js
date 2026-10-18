@@ -76,7 +76,7 @@ export const registerEmployeeController = async (req, res, next) => {
 
 export const createInviteController = async (req, res, next) => {
   try {
-    const { email, role, expiresInDays } = req.body;
+    const { email, role, expiresInDays, name, department, title, salary } = req.body;
     if (!email) {
       return res.status(400).json({ success: false, message: "Email is required" });
     }
@@ -85,6 +85,10 @@ export const createInviteController = async (req, res, next) => {
       companyId: req.companyId,
       role: role || "EMPLOYEE",
       expiresInDays: expiresInDays || 7,
+      name,
+      department,
+      title,
+      salary,
     });
     res.status(201).json(result);
   } catch (error) {

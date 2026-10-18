@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
 
 export default function Login() {
@@ -60,6 +60,9 @@ export default function Login() {
         >
           {busy ? "Signing in..." : "Sign in"}
         </button>
+        <div className="auth-footer">
+          New here? <Link to="/register">Create a company account</Link>
+        </div>
       </form>
     </div>
   );

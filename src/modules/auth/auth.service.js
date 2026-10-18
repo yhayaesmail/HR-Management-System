@@ -204,6 +204,17 @@ export const registerEmployee = async ({ email, password, inviteToken }) => {
       },
     });
 
+    await tx.employee.create({
+      data: {
+        name: invite.name || email.split("@")[0],
+        department: invite.department || "Unassigned",
+        title: invite.title || "Unassigned",
+        salary: invite.salary ?? 0,
+        companyId: invite.companyId,
+        userId: user.id,
+      },
+    });
+
     await tx.invite.update({
       where: { id: invite.id },
       data: { usedAt: new Date() },
@@ -246,7 +257,16 @@ export const registerEmployee = async ({ email, password, inviteToken }) => {
   };
 };
 
-export const createInvite = async ({ email, companyId, role = "EMPLOYEE", expiresInDays = 7 }) => {
+export const createInvite = async ({
+  email,
+  companyId,
+  role = "EMPLOYEE",
+  expiresInDays = 7,
+  name,
+  department,
+  title,
+  salary,
+}) => {
   const existing = await prisma.invite.findUnique({ where: { email } });
   if (existing) {
     throw badRequest("An invite already exists for this email");
@@ -262,6 +282,10 @@ export const createInvite = async ({ email, companyId, role = "EMPLOYEE", expire
       role,
       token,
       expiresAt,
+      name: name || null,
+      department: department || null,
+      title: title || null,
+      salary: salary === undefined || salary === null || salary === "" ? null : Number(salary),
     },
   });
 

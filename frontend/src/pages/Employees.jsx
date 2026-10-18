@@ -18,12 +18,19 @@ import {
 const EMPTY_FORM = {
   name: "",
   email: "",
-  password: "",
   department: "",
   title: "",
   salary: "",
   phone: "",
   address: "",
+};
+
+const EMPTY_INVITE = {
+  name: "",
+  email: "",
+  department: "",
+  title: "",
+  salary: "",
 };
 
 export default function Employees() {
@@ -38,6 +45,12 @@ export default function Employees() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [notice, setNotice] = useState("");
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteForm, setInviteForm] = useState(EMPTY_INVITE);
+  const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteError, setInviteError] = useState("");
+  const [inviteLink, setInviteLink] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const load = async (q = query) => {
     setError("");
@@ -53,19 +66,11 @@ export default function Employees() {
     load();
   }, [query.page]);
 
-  const openCreate = () => {
-    setEditing(null);
-    setForm(EMPTY_FORM);
-    setFormError("");
-    setShowForm(true);
-  };
-
   const openEdit = (emp) => {
     setEditing(emp);
     setForm({
       name: emp.name,
       email: emp.user?.email || "",
-      password: "",
       department: emp.department,
       title: emp.title,
       salary: emp.salary,
@@ -76,38 +81,65 @@ export default function Employees() {
     setShowForm(true);
   };
 
+  const openInvite = () => {
+    setInviteForm(EMPTY_INVITE);
+    setInviteError("");
+    setInviteLink("");
+    setCopied(false);
+    setShowInvite(true);
+  };
+
+  const setInvite = (k) => (e) => setInviteForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const createInvite = async (e) => {
+    e.preventDefault();
+    setInviteBusy(true);
+    setInviteError("");
+    try {
+      const res = await api("/auth/invite", {
+        method: "POST",
+        body: {
+          name: inviteForm.name,
+          email: inviteForm.email,
+          department: inviteForm.department,
+          title: inviteForm.title,
+          salary: inviteForm.salary === "" ? undefined : Number(inviteForm.salary),
+        },
+      });
+      const base = window.location.origin + import.meta.env.BASE_URL;
+      setInviteLink(`${base}#/invite/${res.data.token}`);
+    } catch (err) {
+      setInviteError(err.message);
+    } finally {
+      setInviteBusy(false);
+    }
+  };
+
+  const copyInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setInviteError("Copy failed — select the link and copy it manually");
+    }
+  };
+
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!editing) return;
     setSaving(true);
     setFormError("");
     try {
-      if (editing) {
-        const body = {};
-        for (const k of ["name", "department", "title", "phone", "address"])
-          if (form[k]) body[k] = form[k];
-        if (form.salary !== "") body.salary = Number(form.salary);
-        if (form.email) body.email = form.email;
-        if (form.password) body.password = form.password;
-        await api(`/employees/${editing.id}`, { method: "PUT", body });
-        setNotice("Employee updated");
-      } else {
-        await api("/employees", {
-          method: "POST",
-          body: {
-            name: form.name,
-            email: form.email,
-            password: form.password,
-            department: form.department,
-            title: form.title,
-            salary: Number(form.salary),
-            phone: form.phone || undefined,
-            address: form.address || undefined,
-          },
-        });
-        setNotice("Employee created");
-      }
+      const body = {};
+      for (const k of ["name", "department", "title", "phone", "address"])
+        if (form[k]) body[k] = form[k];
+      if (form.salary !== "") body.salary = Number(form.salary);
+      if (form.email) body.email = form.email;
+      await api(`/employees/${editing.id}`, { method: "PUT", body });
+      setNotice("Employee updated");
       setShowForm(false);
       load({ ...query, page: 1 });
     } catch (err) {
@@ -138,7 +170,11 @@ export default function Employees() {
     <div className="content">
       <PageHeader
         title="Employees"
-        actions={isAdmin && <button className="btn btn-primary" onClick={openCreate}>Add employee</button>}
+        actions={
+          isAdmin && (
+            <button className="btn btn-primary" onClick={openInvite}>Invite employee</button>
+          )
+        }
       />
 
       {notice && <Alert tone="success">{notice}</Alert>}
@@ -162,7 +198,10 @@ export default function Employees() {
         {!data ? (
           <SkeletonTable cols={7} rows={6} />
         ) : data.employees.length === 0 ? (
-          <Empty message="No employees found" />
+          <Empty
+            message="No employees yet"
+            hint={isAdmin ? "Use “Invite employee” to add your first team member" : undefined}
+          />
         ) : (
           <>
             <div className="table-wrap">
@@ -222,7 +261,7 @@ export default function Employees() {
 
       {showForm && (
         <Modal
-          title={editing ? "Edit employee" : "Add employee"}
+          title="Edit employee"
           onClose={() => setShowForm(false)}
           footer={
             <>
@@ -265,22 +304,96 @@ export default function Employees() {
                 <input className="input" value={form.phone} onChange={set("phone")} />
               </Field>
             </div>
-            {!editing && (
-              <Field label="Temporary password">
-                <input
-                  className="input"
-                  type="password"
-                  value={form.password}
-                  onChange={set("password")}
-                  required
-                  placeholder="Minimum 6 characters"
-                />
-              </Field>
-            )}
             <Field label="Address">
               <input className="input" value={form.address} onChange={set("address")} />
             </Field>
           </form>
+        </Modal>
+      )}
+      {showInvite && (
+        <Modal
+          title="Invite employee"
+          onClose={() => setShowInvite(false)}
+          footer={
+            inviteLink ? (
+              <button className="btn btn-primary" onClick={() => setShowInvite(false)}>
+                Done
+              </button>
+            ) : (
+              <>
+                <button className="btn" onClick={() => setShowInvite(false)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  disabled={inviteBusy}
+                  onClick={createInvite}
+                >
+                  {inviteBusy ? "Creating..." : "Generate invite link"}
+                </button>
+              </>
+            )
+          }
+        >
+          {inviteError && <Alert>{inviteError}</Alert>}
+          {inviteLink ? (
+            <>
+              <Alert tone="success">
+                Invite ready — share this link with {inviteForm.email}
+              </Alert>
+              <Field label="Invite link">
+                <div className="invite-link-box">
+                  <input className="input" value={inviteLink} readOnly onFocus={(e) => e.target.select()} />
+                  <button className="btn" onClick={copyInvite}>
+                    {copied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </Field>
+              <div className="field-hint">
+                The link expires in 7 days and works once. When they accept, their employee
+                profile is created automatically with the details you entered.
+              </div>
+            </>
+          ) : (
+            <form onSubmit={createInvite}>
+              <div className="form-row-2">
+                <Field label="Full name">
+                  <input className="input" value={inviteForm.name} onChange={setInvite("name")} placeholder="Jane Doe" required />
+                </Field>
+                <Field label="Email">
+                  <input
+                    className="input"
+                    type="email"
+                    value={inviteForm.email}
+                    onChange={setInvite("email")}
+                    placeholder="name@company.com"
+                    required
+                  />
+                </Field>
+                <Field label="Department">
+                  <input className="input" value={inviteForm.department} onChange={setInvite("department")} placeholder="Engineering" required />
+                </Field>
+                <Field label="Title">
+                  <input className="input" value={inviteForm.title} onChange={setInvite("title")} placeholder="Software Engineer" required />
+                </Field>
+              </div>
+              <Field label="Monthly salary (USD)">
+                <input
+                  className="input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={inviteForm.salary}
+                  onChange={setInvite("salary")}
+                  placeholder="3000"
+                  required
+                />
+              </Field>
+              <div className="field-hint">
+                They'll set their own password when accepting the invite.
+              </div>
+            </form>
+          )}
         </Modal>
       )}
     </div>

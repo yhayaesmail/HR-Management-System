@@ -25,15 +25,20 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  const adopt = (data) => {
+    disconnectSocket();
+    setSession({ accessToken: data.accessToken, user: data.user });
+    setUser(data.user);
+    return data.user;
+  };
+
   const login = async (email, password) => {
     disconnectSocket();
     const data = await api("/auth/login", {
       method: "POST",
       body: { email, password },
     });
-    setSession({ accessToken: data.data.accessToken, user: data.data.user });
-    setUser(data.data.user);
-    return data.data.user;
+    return adopt(data.data);
   };
 
   const logout = async () => {
@@ -47,7 +52,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, ready, login, logout }}>
+    <AuthContext.Provider value={{ user, ready, login, logout, adopt }}>
       {children}
     </AuthContext.Provider>
   );

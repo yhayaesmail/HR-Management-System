@@ -244,6 +244,10 @@ model Invite {
   companyId   String
   token       String   @unique
   role        Role     @default(EMPLOYEE)
+  name        String?
+  department  String?
+  title       String?
+  salary      Float?
   expiresAt   DateTime
   usedAt      DateTime?
   createdAt   DateTime @default(now())

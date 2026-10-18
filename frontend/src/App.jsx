@@ -2,6 +2,8 @@ import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import Layout from "./components/Layout.jsx";
 import Login from "./pages/Login.jsx";
+import RegisterCompany from "./pages/RegisterCompany.jsx";
+import AcceptInvite from "./pages/AcceptInvite.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Employees from "./pages/Employees.jsx";
 import Attendance from "./pages/Attendance.jsx";
@@ -24,6 +26,8 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<RegisterCompany />} />
+          <Route path="/invite/:token" element={<AcceptInvite />} />
           <Route path="/applications/apply" element={<Apply />} />
           <Route path="/applications/progress" element={<Progress />} />
           <Route
